@@ -158,18 +158,6 @@ All without page reloads.
 
 # How It Works
 
-## Architecture Overview
-
-\[
-Browser \rightarrow HTTP Handler \rightarrow sqlc \rightarrow PostgreSQL
-\]
-
-\[
-Handler \rightarrow templ \rightarrow HTML \rightarrow Datastar DOM swap
-\]
-
----
-
 ## Backend
 
 - `chi` router handles HTTP requests
