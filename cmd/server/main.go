@@ -45,7 +45,7 @@ func main() {
 			return
 		}
 
-		views.Layout(
+		_ = views.Layout(
 			views.TaskList(tasks),
 		).Render(r.Context(), w)
 	})
@@ -66,7 +66,7 @@ func main() {
 
 		tasks, _ := queries.ListTasks(r.Context())
 
-		views.TaskList(tasks).Render(r.Context(), w)
+		_ = views.TaskList(tasks).Render(r.Context(), w)
 	})
 
 	r.Post("/tasks/toggle/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -86,10 +86,10 @@ func main() {
 
 		tasks, _ := queries.ListTasks(r.Context())
 
-		views.TaskList(tasks).Render(r.Context(), w)
+		_ = views.TaskList(tasks).Render(r.Context(), w)
 	})
 
-	r.Post("/tasks/delete/{id}", func(w http.ResponseWriter, r *http.Request) {
+	r.Delete("/tasks/{id}", func(w http.ResponseWriter, r *http.Request) {
 		idParam := chi.URLParam(r, "id")
 
 		id, err := strconv.Atoi(idParam)
@@ -106,8 +106,9 @@ func main() {
 
 		tasks, _ := queries.ListTasks(r.Context())
 
-		views.TaskList(tasks).Render(r.Context(), w)
+		_ = views.TaskList(tasks).Render(r.Context(), w)
 	})
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
