@@ -1,0 +1,30 @@
+package views
+
+import "github.com/d3chapma/pocket-tasks/internal/db"
+import "strconv"
+
+templ TaskList(tasks []db.Task) {
+	<div id="tasks">
+		<form data-post="/tasks">
+			<input type="text" name="title" placeholder="New task..." required/>
+			<button type="submit">Add</button>
+		</form>
+		<ul>
+			for _, t := range tasks {
+				<li>
+					<span style={ completedStyle(t.Completed) }>{ t.Title }</span>
+					<button data-post={ "/tasks/toggle/" + strconv.Itoa(t.ID) }>Toggle</button>
+					<button data-post={ "/tasks/delete/" + strconv.Itoa(t.ID) }>Delete</button>
+				</li>
+			}
+		</ul>
+	</div>
+}
+
+func completedStyle(done bool) string {
+	if done {
+		return "text-decoration: line-through;"
+	}
+
+	return ""
+}
