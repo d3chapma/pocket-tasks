@@ -13,8 +13,8 @@ templ TaskList(tasks []db.Task) {
 			for _, t := range tasks {
 				<li>
 					<span style={ completedStyle(t.Completed) }>{ t.Title }</span>
-					<button data-post={ "/tasks/toggle/" + strconv.Itoa(t.ID) }>Toggle</button>
-					<button data-post={ "/tasks/delete/" + strconv.Itoa(t.ID) }>Delete</button>
+					<button data-post={ "/tasks/toggle/" + strconv.Itoa(int(t.ID)) }>Toggle</button>
+					<button data-post={ "/tasks/delete/" + strconv.Itoa(int(t.ID)) }>Delete</button>
 				</li>
 			}
 		</ul>
