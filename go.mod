@@ -5,6 +5,7 @@ go 1.25.5
 require (
 	github.com/a-h/templ v0.3.977
 	github.com/go-chi/chi v1.5.5
+	github.com/go-chi/chi/v5 v5.2.5
 	github.com/jackc/pgx/v5 v5.8.0
 )
 
