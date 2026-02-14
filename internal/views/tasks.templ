@@ -7,24 +7,26 @@ import "fmt"
 templ TaskList(tasks []db.Task) {
 	<div id="tasks">
 		<form>
-			<input type="text" name="title" placeholder="New task..." required/>
-			<button data-on:click="@post('/tasks', {contentType: 'form'})">Add</button>
+			<div class="input-row">
+				<input id="new-task" type="text" name="title" placeholder="What needs to be done?" required/>
+				<button class="btn-primary" data-on:click="@post('/tasks', {contentType: 'form'})">Add</button>
+			</div>
 		</form>
 		<ul>
 			for _, t := range tasks {
 				<li>
-					<span style={ completedStyle(t.Completed) }>{ t.Title }</span>
-					<button data-on:click={ fmt.Sprintf("@post('/tasks/toggle/%d')", t.ID) }>Toggle</button>
-					<button data-on:click={ fmt.Sprintf("@delete('/tasks/%d')", t.ID) }>Delete</button>
+					<span class={ "task-title " + completedClass(t.Completed) }>{ t.Title }</span>
+					<button class="btn-primary" data-on:click={ fmt.Sprintf("@post('/tasks/toggle/%d')", t.ID) }>Toggle</button>
+					<button class="btn-primary" data-on:click={ fmt.Sprintf("@delete('/tasks/%d')", t.ID) }>Delete</button>
 				</li>
 			}
 		</ul>
 	</div>
 }
 
-func completedStyle(done bool) string {
+func completedClass(done bool) string {
 	if done {
-		return "text-decoration: line-through;"
+		return "completed"
 	}
 
 	return ""

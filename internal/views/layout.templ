@@ -2,14 +2,149 @@ package views
 
 templ Layout(content templ.Component) {
 	<!DOCTYPE html>
-	<html>
+	<html lang="en">
 		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>Pocket Tasks</title>
 			<script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js"></script>
+			<style>
+      :root {
+        --bg: #f5f7fa;
+        --card: #ffffff;
+        --border: #e2e8f0;
+        --text: #1a202c;
+        --muted: #718096;
+        --primary: #4f46e5;
+        --primary-hover: #4338ca;
+        --danger: #e53e3e;
+      }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+margin: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, sans-serif;
+background: var(--bg);
+color: var(--text);
+display: flex;
+         justify-content: center;
+padding: 40px 16px;
+  }
+
+  .app {
+width: 100%;
+       max-width: 600px;
+  }
+
+  h1 {
+    margin-bottom: 24px;
+    font-weight: 600;
+  }
+
+  .card {
+background: var(--card);
+border: 1px solid var(--border);
+        border-radius: 12px;
+padding: 20px;
+         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  }
+
+  input {
+width: 100%;
+padding: 10px 12px;
+         border-radius: 8px;
+border: 1px solid var(--border);
+        font-size: 14px;
+  }
+
+input:focus {
+outline: none;
+         border-color: var(--primary);
+      }
+
+      button {
+border: none;
+        border-radius: 8px;
+padding: 8px 12px;
+         font-size: 14px;
+cursor: pointer;
+transition: background 0.15s ease, transform 0.05s ease;
+      }
+
+button:active {
+transform: scale(0.98);
+       }
+
+       .btn-primary {
+background: var(--primary);
+color: white;
+       }
+
+       .btn-primary:hover {
+background: var(--primary-hover);
+       }
+
+       .btn-danger {
+background: var(--danger);
+color: white;
+       }
+
+       ul {
+         list-style: none;
+padding: 0;
+margin: 20px 0 0 0;
+       }
+
+       li {
+display: flex;
+         align-items: center;
+         justify-content: space-between;
+padding: 10px 0;
+         border-bottom: 1px solid var(--border);
+       }
+
+li:last-child {
+     border-bottom: none;
+   }
+
+   .task-title {
+flex: 1;
+      margin-right: 12px;
+   }
+
+   .completed {
+     text-decoration: line-through;
+color: var(--muted);
+   }
+
+   .task-actions {
+display: flex;
+gap: 8px;
+   }
+
+   .input-row {
+display: flex;
+gap: 8px;
+   }
+
+   @media (max-width: 500px) {
+     .input-row {
+       flex-direction: column;
+     }
+   }     
+   </style>
 		</head>
 		<body>
-			<h1>Pocket Tasks</h1>
-			@content
+			<div class="app">
+				<h1>Pocket Tasks</h1>
+				<div class="card">
+					@content
+				</div>
+			</div>
 		</body>
 	</html>
 }
