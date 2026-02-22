@@ -37,6 +37,8 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
+	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		tasks, err := queries.ListTasks(r.Context())
 		if err != nil {
