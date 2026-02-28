@@ -51,9 +51,20 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(keydownHandler(active, completed))
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`
+			var result = handleKeydown(event, {
+				selectedIndex: $selectedIndex,
+				showForm: $showForm,
+				hideCompleted: $hideCompleted,
+				maxIndex: %d,
+				activeLen: %d
+			});
+			$selectedIndex = result.selectedIndex;
+			$showForm = result.showForm;
+			$hideCompleted = result.hideCompleted
+		`, maxIndex(active, completed), len(active)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 13, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 24, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -71,7 +82,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 27, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 38, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -84,7 +95,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(t.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 28, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 39, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -97,7 +108,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/complete/%d')", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 30, Col: 112}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 41, Col: 112}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -110,7 +121,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 31, Col: 137}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 42, Col: 137}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -123,7 +134,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/move/%d/up')", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 32, Col: 113}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 43, Col: 113}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -136,7 +147,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/move/%d/down')", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 33, Col: 117}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 44, Col: 117}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -149,7 +160,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/move/%d/top')", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 34, Col: 115}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 45, Col: 115}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -162,7 +173,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/move/%d/bottom')", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 35, Col: 121}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 46, Col: 121}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -193,7 +204,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(t.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 51, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 62, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -206,7 +217,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(formatTime(t.CompletedAt))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 52, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 63, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -219,7 +230,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/uncomplete/%d')", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 54, Col: 114}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 65, Col: 114}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -232,7 +243,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 55, Col: 137}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 66, Col: 137}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -251,95 +262,12 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 	})
 }
 
-func keydownHandler(active []db.Task, completed []db.Task) string {
+func maxIndex(active []db.Task, completed []db.Task) int {
 	total := len(active) + len(completed)
-	maxIndex := total - 1
-	if maxIndex < 0 {
-		maxIndex = 0
+	if total == 0 {
+		return 0
 	}
-	activeLen := len(active)
-
-	return fmt.Sprintf(`
-      if ($showForm) {
-        if (event.key === 'Escape') {
-          event.preventDefault()
-          $showForm = false
-        }
-        return
-      }
-
-      if (event.key === 'j') {
-        event.preventDefault()
-        $selectedIndex = Math.min($selectedIndex + 1, %d)
-      }
-      if (event.key === 'k') {
-        event.preventDefault()
-        $selectedIndex = Math.max($selectedIndex - 1, 0)
-      }
-      if (event.key === ' ') {
-        event.preventDefault()
-        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
-        var el = items[$selectedIndex]
-        if (el) {
-          el.querySelectorAll('[data-toggle]')[0].click()
-        }
-      }
-      if (event.key === 'y') {
-        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
-        var el = items[$selectedIndex]
-        if (el) {
-          var title = el.querySelector('.task-title').textContent
-          navigator.clipboard.writeText(title)
-        }
-      }
-      if (event.key === 'i') {
-        event.preventDefault()
-        $showForm = true
-        setTimeout(function() { document.getElementById('new-task').focus() }, 0)
-      }
-      if (event.key === 'x') {
-        $hideCompleted = !$hideCompleted
-      }
-      if (event.key === 'd') {
-        if (window._pendingD) {
-          clearTimeout(window._pendingD)
-          window._pendingD = null
-          var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
-          var el = items[$selectedIndex]
-          if (el) {
-            el.querySelector('[data-delete]').click()
-          }
-        } else {
-          window._pendingD = setTimeout(function() {
-            window._pendingD = null
-          }, 500)
-        }
-      }
-      if (event.key === 'K' && $selectedIndex < %d && $selectedIndex > 0) {
-        event.preventDefault()
-        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
-        var el = items[$selectedIndex]
-        if (el) el.querySelector('[data-move-up]').click()
-      }
-      if (event.key === 'J' && $selectedIndex < %d - 1) {
-        event.preventDefault()
-        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
-        var el = items[$selectedIndex]
-        if (el) el.querySelector('[data-move-down]').click()
-      }
-      if (event.key === 'H' && $selectedIndex < %d && $selectedIndex > 0) {
-        event.preventDefault()
-        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
-        var el = items[$selectedIndex]
-        if (el) el.querySelector('[data-move-top]').click()
-      }
-      if (event.key === 'L' && $selectedIndex < %d && $selectedIndex < %d - 1) {
-        event.preventDefault()
-        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
-        var el = items[$selectedIndex]
-        if (el) el.querySelector('[data-move-bottom]').click()
-      }
-    `, maxIndex, activeLen, activeLen, activeLen, activeLen, activeLen)
+	return total - 1
 }
 
 func formatTime(t pgtype.Timestamp) string {
@@ -347,13 +275,6 @@ func formatTime(t pgtype.Timestamp) string {
 		return ""
 	}
 	return t.Time.Format("Jan 2 3:04 PM")
-}
-
-func completedClass(done bool) string {
-	if done {
-		return "completed"
-	}
-	return ""
 }
 
 var _ = templruntime.GeneratedTemplate

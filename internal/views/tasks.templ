@@ -10,7 +10,18 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int) {
 		data-signals:selected-index={ fmt.Sprintf("%d", selectedIndex) }
 		data-signals:show-form="false"
 		data-signals:hide-completed="false"
-		data-on:keydown__window={ keydownHandler(active, completed) }
+		data-on:keydown__window={ fmt.Sprintf(`
+			var result = handleKeydown(event, {
+				selectedIndex: $selectedIndex,
+				showForm: $showForm,
+				hideCompleted: $hideCompleted,
+				maxIndex: %d,
+				activeLen: %d
+			});
+			$selectedIndex = result.selectedIndex;
+			$showForm = result.showForm;
+			$hideCompleted = result.hideCompleted
+		`, maxIndex(active, completed), len(active)) }
 		tabindex="0"
 	>
 		<form data-show="$showForm" class="new-task-form">
@@ -64,95 +75,12 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int) {
 	</div>
 }
 
-func keydownHandler(active []db.Task, completed []db.Task) string {
+func maxIndex(active []db.Task, completed []db.Task) int {
 	total := len(active) + len(completed)
-	maxIndex := total - 1
-	if maxIndex < 0 {
-		maxIndex = 0
+	if total == 0 {
+		return 0
 	}
-	activeLen := len(active)
-
-	return fmt.Sprintf(`
-      if ($showForm) {
-        if (event.key === 'Escape') {
-          event.preventDefault()
-          $showForm = false
-        }
-        return
-      }
-
-      if (event.key === 'j') {
-        event.preventDefault()
-        $selectedIndex = Math.min($selectedIndex + 1, %d)
-      }
-      if (event.key === 'k') {
-        event.preventDefault()
-        $selectedIndex = Math.max($selectedIndex - 1, 0)
-      }
-      if (event.key === ' ') {
-        event.preventDefault()
-        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
-        var el = items[$selectedIndex]
-        if (el) {
-          el.querySelectorAll('[data-toggle]')[0].click()
-        }
-      }
-      if (event.key === 'y') {
-        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
-        var el = items[$selectedIndex]
-        if (el) {
-          var title = el.querySelector('.task-title').textContent
-          navigator.clipboard.writeText(title)
-        }
-      }
-      if (event.key === 'i') {
-        event.preventDefault()
-        $showForm = true
-        setTimeout(function() { document.getElementById('new-task').focus() }, 0)
-      }
-      if (event.key === 'x') {
-        $hideCompleted = !$hideCompleted
-      }
-      if (event.key === 'd') {
-        if (window._pendingD) {
-          clearTimeout(window._pendingD)
-          window._pendingD = null
-          var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
-          var el = items[$selectedIndex]
-          if (el) {
-            el.querySelector('[data-delete]').click()
-          }
-        } else {
-          window._pendingD = setTimeout(function() {
-            window._pendingD = null
-          }, 500)
-        }
-      }
-      if (event.key === 'K' && $selectedIndex < %d && $selectedIndex > 0) {
-        event.preventDefault()
-        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
-        var el = items[$selectedIndex]
-        if (el) el.querySelector('[data-move-up]').click()
-      }
-      if (event.key === 'J' && $selectedIndex < %d - 1) {
-        event.preventDefault()
-        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
-        var el = items[$selectedIndex]
-        if (el) el.querySelector('[data-move-down]').click()
-      }
-      if (event.key === 'H' && $selectedIndex < %d && $selectedIndex > 0) {
-        event.preventDefault()
-        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
-        var el = items[$selectedIndex]
-        if (el) el.querySelector('[data-move-top]').click()
-      }
-      if (event.key === 'L' && $selectedIndex < %d && $selectedIndex < %d - 1) {
-        event.preventDefault()
-        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
-        var el = items[$selectedIndex]
-        if (el) el.querySelector('[data-move-bottom]').click()
-      }
-    `, maxIndex, activeLen, activeLen, activeLen, activeLen, activeLen)
+	return total - 1
 }
 
 func formatTime(t pgtype.Timestamp) string {
@@ -160,11 +88,4 @@ func formatTime(t pgtype.Timestamp) string {
 		return ""
 	}
 	return t.Time.Format("Jan 2 3:04 PM")
-}
-
-func completedClass(done bool) string {
-	if done {
-		return "completed"
-	}
-	return ""
 }
