@@ -1,65 +1,19 @@
 package views
 
-import "github.com/d3chapma/pocket-tasks/internal/db"
+import (
+	"fmt"
+	"github.com/d3chapma/pocket-tasks/internal/db"
+	"github.com/jackc/pgx/v5/pgtype"
+)
 
-import "fmt"
-
-templ TaskList(tasks []db.Task) {
+templ TaskList(active []db.Task, completed []db.Task) {
 	<div
 		id="tasks"
 		data-signals:selectedIndex="0"
 		data-signals:showForm="false"
 		data-signals:hideCompleted="false"
-		data-on:keydown__window="
-      if ($showForm) {
-        if (event.key === 'Escape') {
-          event.preventDefault()
-          $showForm = false
-        }
-        return
-      }
-
-      if (event.key === 'j') {
-        event.preventDefault()
-        $selectedIndex = Math.min($selectedIndex + 1, document.querySelectorAll('#tasks li:not([style*=none])').length - 1)
-      }
-      if (event.key === 'J') {
-        event.preventDefault()
-        $selectedIndex = document.querySelectorAll('#tasks li:not([style*=none])').length - 1
-      }
-      if (event.key === 'k') {
-        event.preventDefault()
-        $selectedIndex = Math.max($selectedIndex - 1, 0)
-      }
-      if (event.key === 'K') {
-        event.preventDefault()
-        $selectedIndex = 0 
-      }
-      if (event.key === ' ') {
-        const items = document.querySelectorAll('#tasks li:not([style*=none])')
-        const el = items[$selectedIndex]
-        if (el) {
-          el.querySelectorAll('[data-toggle]')[0].click()
-        }
-      }
-      if (event.key === 'y') {
-        const items = document.querySelectorAll('#tasks li:not([style*=none])')
-        const el = items[$selectedIndex]
-        if (el) {
-          const title = el.querySelector('.task-title').textContent
-          const result = navigator.clipboard.writeText(title)
-        }
-      }
-      if (event.key === 'i') {
-        event.preventDefault()
-        $showForm = true
-        setTimeout(() => document.getElementById('new-task').focus(), 0)
-      }
-      if (event.key === 'x') {
-        $hideCompleted = !$hideCompleted
-        $selectedIndex = 0
-      }
-    "
+		data-on:keydown__window={ keydownHandler(active, completed) }
+		tabindex="0"
 	>
 		<form data-show="$showForm">
 			<div class="input-row">
@@ -68,26 +22,92 @@ templ TaskList(tasks []db.Task) {
 			</div>
 		</form>
 		<ul>
-			for i, t := range tasks {
-				<li
-					data-class:selected={ fmt.Sprintf("$selectedIndex == %d", i) }
-					if t.Completed {
-						data-show="!$hideCompleted"
-					}
-				>
-					<span class={ "task-title " + completedClass(t.Completed) }>{ t.Title }</span>
-					<button class="btn-primary" data-toggle data-on:click={ fmt.Sprintf("@post('/tasks/toggle/%d')", t.ID) }>Toggle</button>
+			for i, t := range active {
+				<li data-class:selected={ fmt.Sprintf("$selectedIndex == %d", i) }>
+					<span class="task-title">{ t.Title }</span>
+					<button class="btn-primary" data-toggle data-on:click={ fmt.Sprintf("@post('/tasks/complete/%d')", t.ID) }>Complete</button>
 					<button class="btn-primary" data-on:click={ fmt.Sprintf("@delete('/tasks/%d')", t.ID) }>Delete</button>
 				</li>
 			}
 		</ul>
+		if len(completed) > 0 {
+			<div data-show="!$hideCompleted" class="completed-section">
+				<h3 class="completed-heading">Completed</h3>
+				<ul>
+					for _, t := range completed {
+						<li>
+							<span class="task-title completed">{ t.Title }</span>
+							<span class="timestamp">{ formatTime(t.CompletedAt) }</span>
+							<button class="btn-primary" data-on:click={ fmt.Sprintf("@post('/tasks/uncomplete/%d')", t.ID) }>Undo</button>
+							<button class="btn-primary" data-on:click={ fmt.Sprintf("@delete('/tasks/%d')", t.ID) }>Delete</button>
+						</li>
+					}
+				</ul>
+			</div>
+		}
 	</div>
+}
+
+func keydownHandler(active []db.Task, completed []db.Task) string {
+	maxIndex := len(active) - 1
+	if maxIndex < 0 {
+		maxIndex = 0
+	}
+
+	return fmt.Sprintf(`
+      if ($showForm) {
+        if (event.key === 'Escape') {
+          event.preventDefault()
+          $showForm = false
+        }
+        return
+      }
+
+      if (event.key == 'j') {
+        event.preventDefault()
+        $selectedIndex = Math.min($selectedIndex + 1, %d)
+      }
+      if (event.key == 'k') {
+        event.preventDefault()
+        $selectedIndex = Math.max($selectedIndex - 1, 0)
+      }
+      if (event.key === ' ') {
+        event.preventDefault()
+        const items = document.querySelectorAll('#tasks > ul:first-of-type li')
+        const el = items[$selectedIndex]
+        if (el) {
+          el.querySelectorAll('[data-toggle]')[0].click()
+        }
+      }
+      if (event.key === 'y') {
+        const items = document.querySelectorAll('#tasks > ul:first-of-type li')
+        const el = items[$selectedIndex]
+        if (el) {
+          const title = el.querySelector('.task-title').textContent
+          navigator.clipboard.writeText(title)
+        }
+      }
+      if (event.key === 'i') {
+        event.preventDefault()
+        $showForm = true
+        setTimeout(function() { document.getElementById('new-task').focus() }, 0)
+      }
+      if (event.key === 'x') {
+        $hideCompleted = !$hideCompleted
+      }
+    `, maxIndex)
+}
+
+func formatTime(t pgtype.Timestamp) string {
+	if !t.Valid {
+		return ""
+	}
+	return t.Time.Format("Jan 2 3:04 PM")
 }
 
 func completedClass(done bool) string {
 	if done {
 		return "completed"
 	}
-
 	return ""
 }

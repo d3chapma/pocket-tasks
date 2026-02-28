@@ -40,15 +40,19 @@ func main() {
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		tasks, err := queries.ListTasks(r.Context())
+		active, err := queries.ListActiveTasks(r.Context())
 		if err != nil {
-			log.Println("ListTasks error:", err)
+			http.Error(w, "Failed to load tasks", 500)
+			return
+		}
+		completed, err := queries.ListCompletedTasks(r.Context())
+		if err != nil {
 			http.Error(w, "Failed to load tasks", 500)
 			return
 		}
 
 		_ = views.Layout(
-			views.TaskList(tasks),
+			views.TaskList(active, completed),
 		).Render(r.Context(), w)
 	})
 
@@ -59,41 +63,57 @@ func main() {
 		}
 
 		title := r.FormValue("title")
-
 		_, err := queries.CreateTask(r.Context(), title)
 		if err != nil {
 			http.Error(w, "Failed to create task", 500)
 			return
 		}
 
-		tasks, _ := queries.ListTasks(r.Context())
-
-		_ = views.TaskList(tasks).Render(r.Context(), w)
+		active, _ := queries.ListActiveTasks(r.Context())
+		completed, _ := queries.ListCompletedTasks(r.Context())
+		_ = views.TaskList(active, completed).Render(r.Context(), w)
 	})
 
-	r.Post("/tasks/toggle/{id}", func(w http.ResponseWriter, r *http.Request) {
+	r.Post("/tasks/complete/{id}", func(w http.ResponseWriter, r *http.Request) {
 		idParam := chi.URLParam(r, "id")
-
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
 			http.Error(w, "Invalid ID", 400)
 			return
 		}
 
-		_, err = queries.ToggleTask(r.Context(), int32(id))
+		_, err = queries.CompleteTask(r.Context(), int32(id))
 		if err != nil {
-			http.Error(w, "Failed to toggle task", 500)
+			http.Error(w, "Failed to complete task", 500)
 			return
 		}
 
-		tasks, _ := queries.ListTasks(r.Context())
+		active, _ := queries.ListActiveTasks(r.Context())
+		completed, _ := queries.ListCompletedTasks(r.Context())
+		_ = views.TaskList(active, completed).Render(r.Context(), w)
+	})
 
-		_ = views.TaskList(tasks).Render(r.Context(), w)
+	r.Post("/tasks/uncomplete/{id}", func(w http.ResponseWriter, r *http.Request) {
+		idParam := chi.URLParam(r, "id")
+		id, err := strconv.Atoi(idParam)
+		if err != nil {
+			http.Error(w, "Invalid ID", 400)
+			return
+		}
+
+		_, err = queries.UncompleteTask(r.Context(), int32(id))
+		if err != nil {
+			http.Error(w, "Failed to uncomplete task", 500)
+			return
+		}
+
+		active, _ := queries.ListActiveTasks(r.Context())
+		completed, _ := queries.ListCompletedTasks(r.Context())
+		_ = views.TaskList(active, completed).Render(r.Context(), w)
 	})
 
 	r.Delete("/tasks/{id}", func(w http.ResponseWriter, r *http.Request) {
 		idParam := chi.URLParam(r, "id")
-
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
 			http.Error(w, "Invalid ID", 400)
@@ -106,9 +126,9 @@ func main() {
 			return
 		}
 
-		tasks, _ := queries.ListTasks(r.Context())
-
-		_ = views.TaskList(tasks).Render(r.Context(), w)
+		active, _ := queries.ListActiveTasks(r.Context())
+		completed, _ := queries.ListCompletedTasks(r.Context())
+		_ = views.TaskList(active, completed).Render(r.Context(), w)
 	})
 
 	port := os.Getenv("PORT")

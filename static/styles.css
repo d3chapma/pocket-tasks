@@ -257,3 +257,24 @@ ul:empty::after {
     padding: 16px;
   }
 }
+
+.completed-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.completed-heading {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.timestamp {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}

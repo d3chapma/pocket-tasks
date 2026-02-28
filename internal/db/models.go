@@ -9,8 +9,8 @@ import (
 )
 
 type Task struct {
-	ID        int32
-	Title     string
-	Completed bool
-	CreatedAt pgtype.Timestamp
+	ID          int32
+	Title       string
+	CompletedAt pgtype.Timestamp
+	CreatedAt   pgtype.Timestamp
 }

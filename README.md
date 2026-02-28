@@ -47,6 +47,7 @@ db/query.sql       → SQL queries for sqlc
 Create a local PostgreSQL database:
 
 ```bash
+dropdb pocket
 createdb pocket
 ```
 

@@ -9,10 +9,29 @@ import (
 	"context"
 )
 
+const completeTask = `-- name: CompleteTask :one
+UPDATE tasks
+SET completed_at = now()
+WHERE id = $1
+RETURNING id, title, completed_at, created_at
+`
+
+func (q *Queries) CompleteTask(ctx context.Context, id int32) (Task, error) {
+	row := q.db.QueryRow(ctx, completeTask, id)
+	var i Task
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.CompletedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createTask = `-- name: CreateTask :one
 INSERT INTO tasks (title)
 VALUES ($1)
-RETURNING id, title, completed, created_at
+RETURNING id, title, completed_at, created_at
 `
 
 func (q *Queries) CreateTask(ctx context.Context, title string) (Task, error) {
@@ -21,7 +40,7 @@ func (q *Queries) CreateTask(ctx context.Context, title string) (Task, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
-		&i.Completed,
+		&i.CompletedAt,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -37,13 +56,14 @@ func (q *Queries) DeleteTask(ctx context.Context, id int32) error {
 	return err
 }
 
-const listTasks = `-- name: ListTasks :many
-SELECT id, title, completed, created_at FROM tasks
+const listActiveTasks = `-- name: ListActiveTasks :many
+SELECT id, title, completed_at, created_at FROM tasks
+WHERE completed_at IS NULL
 ORDER BY created_at DESC
 `
 
-func (q *Queries) ListTasks(ctx context.Context) ([]Task, error) {
-	rows, err := q.db.Query(ctx, listTasks)
+func (q *Queries) ListActiveTasks(ctx context.Context) ([]Task, error) {
+	rows, err := q.db.Query(ctx, listActiveTasks)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +74,7 @@ func (q *Queries) ListTasks(ctx context.Context) ([]Task, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.Title,
-			&i.Completed,
+			&i.CompletedAt,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -67,20 +87,51 @@ func (q *Queries) ListTasks(ctx context.Context) ([]Task, error) {
 	return items, nil
 }
 
-const toggleTask = `-- name: ToggleTask :one
-UPDATE tasks
-SET completed = NOT completed
-WHERE id = $1
-RETURNING id, title, completed, created_at
+const listCompletedTasks = `-- name: ListCompletedTasks :many
+SELECT id, title, completed_at, created_at FROM tasks
+WHERE completed_at IS NOT NULL
+ORDER BY completed_at DESC
 `
 
-func (q *Queries) ToggleTask(ctx context.Context, id int32) (Task, error) {
-	row := q.db.QueryRow(ctx, toggleTask, id)
+func (q *Queries) ListCompletedTasks(ctx context.Context) ([]Task, error) {
+	rows, err := q.db.Query(ctx, listCompletedTasks)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Task
+	for rows.Next() {
+		var i Task
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.CompletedAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const uncompleteTask = `-- name: UncompleteTask :one
+UPDATE tasks
+SET completed_at = NULL
+WHERE id = $1
+RETURNING id, title, completed_at, created_at
+`
+
+func (q *Queries) UncompleteTask(ctx context.Context, id int32) (Task, error) {
+	row := q.db.QueryRow(ctx, uncompleteTask, id)
 	var i Task
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
-		&i.Completed,
+		&i.CompletedAt,
 		&i.CreatedAt,
 	)
 	return i, err
