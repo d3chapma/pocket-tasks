@@ -27,7 +27,15 @@ function handleKeydown(event, state) {
       break;
 
     case "y":
-      copySelected(selectedIndex);
+      if (window._pendingY) {
+        clearTimeout(window._pendingY);
+        window._pendingY = null;
+        copySelected(selectedIndex);
+      } else {
+        window._pendingY = setTimeout(function () {
+          window._pendingY = null;
+        }, 500);
+      }
       break;
 
     case "i":
