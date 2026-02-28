@@ -16,7 +16,7 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int) {
 		<form data-show="$showForm">
 			<div class="input-row">
 				<input id="new-task" type="text" name="title" placeholder="What needs to be done?" required/>
-				<button class="btn-primary" data-on:click="@post('/tasks', {contentType: 'form'}); $showForm = false">Add</button>
+				<button class="btn-primary" data-on:click="@post('/tasks', {contentType: 'form'}); $showForm = false; document.getElementById('new-task').value = ''">Add</button>
 			</div>
 		</form>
 		<ul>

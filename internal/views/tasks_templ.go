@@ -59,7 +59,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" tabindex=\"0\"><form data-show=\"$showForm\"><div class=\"input-row\"><input id=\"new-task\" type=\"text\" name=\"title\" placeholder=\"What needs to be done?\" required> <button class=\"btn-primary\" data-on:click=\"@post('/tasks', {contentType: 'form'}); $showForm = false\">Add</button></div></form><ul>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" tabindex=\"0\"><form data-show=\"$showForm\"><div class=\"input-row\"><input id=\"new-task\" type=\"text\" name=\"title\" placeholder=\"What needs to be done?\" required> <button class=\"btn-primary\" data-on:click=\"@post('/tasks', {contentType: 'form'}); $showForm = false; document.getElementById('new-task').value = ''\">Add</button></div></form><ul>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
