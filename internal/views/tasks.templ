@@ -1,17 +1,15 @@
 package views
 
-import (
-	"fmt"
-	"github.com/d3chapma/pocket-tasks/internal/db"
-	"github.com/jackc/pgx/v5/pgtype"
-)
+import "github.com/d3chapma/pocket-tasks/internal/db"
+import "fmt"
+import "github.com/jackc/pgx/v5/pgtype"
 
-templ TaskList(active []db.Task, completed []db.Task) {
+templ TaskList(active []db.Task, completed []db.Task, selectedIndex int) {
 	<div
 		id="tasks"
-		data-signals:selectedIndex="0"
-		data-signals:showForm="false"
-		data-signals:hideCompleted="false"
+		data-signals:selected-index={ fmt.Sprintf("%d", selectedIndex) }
+		data-signals:show-form="false"
+		data-signals:hide-completed="false"
 		data-on:keydown__window={ keydownHandler(active, completed) }
 		tabindex="0"
 	>
@@ -34,12 +32,12 @@ templ TaskList(active []db.Task, completed []db.Task) {
 			<div data-show="!$hideCompleted" class="completed-section">
 				<h3 class="completed-heading">Completed</h3>
 				<ul>
-					for _, t := range completed {
-						<li>
+					for i, t := range completed {
+						<li data-class:selected={ fmt.Sprintf("$selectedIndex == %d", i+len(active)) }>
 							<span class="task-title completed">{ t.Title }</span>
 							<span class="timestamp">{ formatTime(t.CompletedAt) }</span>
-							<button class="btn-primary" data-on:click={ fmt.Sprintf("@post('/tasks/uncomplete/%d')", t.ID) }>Undo</button>
-							<button class="btn-primary" data-on:click={ fmt.Sprintf("@delete('/tasks/%d')", t.ID) }>Delete</button>
+							<button class="btn-primary" data-toggle data-on:click={ fmt.Sprintf("@post('/tasks/uncomplete/%d')", t.ID) }>Undo</button>
+							<button class="btn-primary" data-on:click={ fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID) }>Delete</button>
 						</li>
 					}
 				</ul>
@@ -49,7 +47,8 @@ templ TaskList(active []db.Task, completed []db.Task) {
 }
 
 func keydownHandler(active []db.Task, completed []db.Task) string {
-	maxIndex := len(active) - 1
+	total := len(active) + len(completed)
+	maxIndex := total - 1
 	if maxIndex < 0 {
 		maxIndex = 0
 	}
@@ -63,24 +62,24 @@ func keydownHandler(active []db.Task, completed []db.Task) string {
         return
       }
 
-      if (event.key == 'j') {
+      if (event.key === 'j') {
         event.preventDefault()
         $selectedIndex = Math.min($selectedIndex + 1, %d)
       }
-      if (event.key == 'k') {
+      if (event.key === 'k') {
         event.preventDefault()
         $selectedIndex = Math.max($selectedIndex - 1, 0)
       }
       if (event.key === ' ') {
         event.preventDefault()
-        const items = document.querySelectorAll('#tasks > ul:first-of-type li')
+        const items = document.querySelectorAll('#tasks li')
         const el = items[$selectedIndex]
         if (el) {
           el.querySelectorAll('[data-toggle]')[0].click()
         }
       }
       if (event.key === 'y') {
-        const items = document.querySelectorAll('#tasks > ul:first-of-type li')
+        const items = document.querySelectorAll('#tasks li')
         const el = items[$selectedIndex]
         if (el) {
           const title = el.querySelector('.task-title').textContent
@@ -95,6 +94,21 @@ func keydownHandler(active []db.Task, completed []db.Task) string {
       if (event.key === 'x') {
         $hideCompleted = !$hideCompleted
       }
+      if (event.key === 'd') {
+      if (window._pendingD) {
+        clearTimeout(window._pendingD)
+          window._pendingD = null
+          const items = document.querySelectorAll('#tasks li')
+          const el = items[$selectedIndex]
+          if (el) {
+            el.querySelector('button:last-child').click()
+          }
+      } else {
+        window._pendingD = setTimeout(function() {
+            window._pendingD = null
+            }, 500)
+      }
+}
     `, maxIndex)
 }
 

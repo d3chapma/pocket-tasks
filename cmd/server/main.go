@@ -52,7 +52,7 @@ func main() {
 		}
 
 		_ = views.Layout(
-			views.TaskList(active, completed),
+			views.TaskList(active, completed, 0),
 		).Render(r.Context(), w)
 	})
 
@@ -71,7 +71,7 @@ func main() {
 
 		active, _ := queries.ListActiveTasks(r.Context())
 		completed, _ := queries.ListCompletedTasks(r.Context())
-		_ = views.TaskList(active, completed).Render(r.Context(), w)
+		_ = views.TaskList(active, completed, 0).Render(r.Context(), w)
 	})
 
 	r.Post("/tasks/complete/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -90,7 +90,17 @@ func main() {
 
 		active, _ := queries.ListActiveTasks(r.Context())
 		completed, _ := queries.ListCompletedTasks(r.Context())
-		_ = views.TaskList(active, completed).Render(r.Context(), w)
+
+		// Task moved from active to top of completed list
+		// New index = len(active) since it's now first in completed
+		newIndex := len(active)
+		// But if the user was beyond the list, clamp it
+		total := len(active) + len(completed)
+		if newIndex >= total {
+			newIndex = total - 1
+		}
+
+		_ = views.TaskList(active, completed, newIndex).Render(r.Context(), w)
 	})
 
 	r.Post("/tasks/uncomplete/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +119,7 @@ func main() {
 
 		active, _ := queries.ListActiveTasks(r.Context())
 		completed, _ := queries.ListCompletedTasks(r.Context())
-		_ = views.TaskList(active, completed).Render(r.Context(), w)
+		_ = views.TaskList(active, completed, 0).Render(r.Context(), w)
 	})
 
 	r.Delete("/tasks/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -120,6 +130,8 @@ func main() {
 			return
 		}
 
+		selectedIndex, _ := strconv.Atoi(r.URL.Query().Get("selectedIndex"))
+
 		err = queries.DeleteTask(r.Context(), int32(id))
 		if err != nil {
 			http.Error(w, "Failed to delete task", 500)
@@ -128,7 +140,16 @@ func main() {
 
 		active, _ := queries.ListActiveTasks(r.Context())
 		completed, _ := queries.ListCompletedTasks(r.Context())
-		_ = views.TaskList(active, completed).Render(r.Context(), w)
+
+		total := len(active) + len(completed)
+		if selectedIndex >= total {
+			selectedIndex = total - 1
+		}
+		if selectedIndex < 0 {
+			selectedIndex = 0
+		}
+
+		_ = views.TaskList(active, completed, selectedIndex).Render(r.Context(), w)
 	})
 
 	port := os.Getenv("PORT")
