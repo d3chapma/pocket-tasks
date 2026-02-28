@@ -21,10 +21,14 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int) {
 		</form>
 		<ul>
 			for i, t := range active {
-				<li data-class:selected={ fmt.Sprintf("$selectedIndex == %d", i) }>
+				<li data-class:selected={ fmt.Sprintf("$selectedIndex == %d", i) } data-id={ fmt.Sprintf("%d", t.ID) }>
 					<span class="task-title">{ t.Title }</span>
 					<button class="btn-primary" data-toggle data-on:click={ fmt.Sprintf("@post('/tasks/complete/%d')", t.ID) }>Complete</button>
-					<button class="btn-primary" data-on:click={ fmt.Sprintf("@delete('/tasks/%d')", t.ID) }>Delete</button>
+					<button class="btn-primary" data-delete data-on:click={ fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID) }>Delete</button>
+					<button style="display:none" data-move-up data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/up')", t.ID) }></button>
+					<button style="display:none" data-move-down data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/down')", t.ID) }></button>
+					<button style="display:none" data-move-top data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/top')", t.ID) }></button>
+					<button style="display:none" data-move-bottom data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/bottom')", t.ID) }></button>
 				</li>
 			}
 		</ul>
@@ -52,6 +56,7 @@ func keydownHandler(active []db.Task, completed []db.Task) string {
 	if maxIndex < 0 {
 		maxIndex = 0
 	}
+	activeLen := len(active)
 
 	return fmt.Sprintf(`
       if ($showForm) {
@@ -95,21 +100,45 @@ func keydownHandler(active []db.Task, completed []db.Task) string {
         $hideCompleted = !$hideCompleted
       }
       if (event.key === 'd') {
-      if (window._pendingD) {
-        clearTimeout(window._pendingD)
-          window._pendingD = null
-          const items = document.querySelectorAll('#tasks li')
-          const el = items[$selectedIndex]
-          if (el) {
-            el.querySelector('button:last-child').click()
+          if (window._pendingD) {
+              clearTimeout(window._pendingD)
+              window._pendingD = null
+              const items = document.querySelectorAll('#tasks li')
+              const el = items[$selectedIndex]
+              if (el) {
+                  el.querySelector('[data-delete]').click()
+              }
+          } else {
+              window._pendingD = setTimeout(function() {
+                  window._pendingD = null
+              }, 500)
           }
-      } else {
-        window._pendingD = setTimeout(function() {
-            window._pendingD = null
-            }, 500)
       }
-}
-    `, maxIndex)
+      if (event.key === 'K' && $selectedIndex < %d && $selectedIndex > 0) {
+        event.preventDefault()
+        const items = document.querySelectorAll('#tasks > ul:first-of-type li')
+        const el = items[$selectedIndex]
+        if (el) el.querySelector('[data-move-up]').click()
+      }
+      if (event.key === 'J' && $selectedIndex < %d - 1) {
+        event.preventDefault()
+        const items = document.querySelectorAll('#tasks > ul:first-of-type li')
+        const el = items[$selectedIndex]
+        if (el) el.querySelector('[data-move-down]').click()
+      }
+      if (event.key === 'H' && $selectedIndex < %d && $selectedIndex > 0) {
+        event.preventDefault()
+        const items = document.querySelectorAll('#tasks > ul:first-of-type li')
+        const el = items[$selectedIndex]
+        if (el) el.querySelector('[data-move-top]').click()
+      }
+      if (event.key === 'L' && $selectedIndex < %d && $selectedIndex < %d - 1) {
+        event.preventDefault()
+        const items = document.querySelectorAll('#tasks > ul:first-of-type li')
+        const el = items[$selectedIndex]
+        if (el) el.querySelector('[data-move-bottom]').click()
+      }
+    `, maxIndex, activeLen, activeLen, activeLen, activeLen, activeLen)
 }
 
 func formatTime(t pgtype.Timestamp) string {

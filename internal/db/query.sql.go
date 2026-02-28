@@ -13,7 +13,7 @@ const completeTask = `-- name: CompleteTask :one
 UPDATE tasks
 SET completed_at = now()
 WHERE id = $1
-RETURNING id, title, completed_at, created_at
+RETURNING id, title, completed_at, position, created_at
 `
 
 func (q *Queries) CompleteTask(ctx context.Context, id int32) (Task, error) {
@@ -23,24 +23,31 @@ func (q *Queries) CompleteTask(ctx context.Context, id int32) (Task, error) {
 		&i.ID,
 		&i.Title,
 		&i.CompletedAt,
+		&i.Position,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const createTask = `-- name: CreateTask :one
-INSERT INTO tasks (title)
-VALUES ($1)
-RETURNING id, title, completed_at, created_at
+INSERT INTO tasks (title, position)
+VALUES ($1, $2)
+RETURNING id, title, completed_at, position, created_at
 `
 
-func (q *Queries) CreateTask(ctx context.Context, title string) (Task, error) {
-	row := q.db.QueryRow(ctx, createTask, title)
+type CreateTaskParams struct {
+	Title    string
+	Position int32
+}
+
+func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, error) {
+	row := q.db.QueryRow(ctx, createTask, arg.Title, arg.Position)
 	var i Task
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
 		&i.CompletedAt,
+		&i.Position,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -56,10 +63,21 @@ func (q *Queries) DeleteTask(ctx context.Context, id int32) error {
 	return err
 }
 
+const getMaxPosition = `-- name: GetMaxPosition :one
+SELECT COALESCE(MAX(position), 0)::int FROM tasks WHERE completed_at IS NULL
+`
+
+func (q *Queries) GetMaxPosition(ctx context.Context) (int32, error) {
+	row := q.db.QueryRow(ctx, getMaxPosition)
+	var column_1 int32
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const listActiveTasks = `-- name: ListActiveTasks :many
-SELECT id, title, completed_at, created_at FROM tasks
+SELECT id, title, completed_at, position, created_at FROM tasks
 WHERE completed_at IS NULL
-ORDER BY created_at DESC
+ORDER BY position ASC
 `
 
 func (q *Queries) ListActiveTasks(ctx context.Context) ([]Task, error) {
@@ -75,6 +93,7 @@ func (q *Queries) ListActiveTasks(ctx context.Context) ([]Task, error) {
 			&i.ID,
 			&i.Title,
 			&i.CompletedAt,
+			&i.Position,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -88,7 +107,7 @@ func (q *Queries) ListActiveTasks(ctx context.Context) ([]Task, error) {
 }
 
 const listCompletedTasks = `-- name: ListCompletedTasks :many
-SELECT id, title, completed_at, created_at FROM tasks
+SELECT id, title, completed_at, position, created_at FROM tasks
 WHERE completed_at IS NOT NULL
 ORDER BY completed_at DESC
 `
@@ -106,6 +125,7 @@ func (q *Queries) ListCompletedTasks(ctx context.Context) ([]Task, error) {
 			&i.ID,
 			&i.Title,
 			&i.CompletedAt,
+			&i.Position,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -120,19 +140,39 @@ func (q *Queries) ListCompletedTasks(ctx context.Context) ([]Task, error) {
 
 const uncompleteTask = `-- name: UncompleteTask :one
 UPDATE tasks
-SET completed_at = NULL
+SET completed_at = NULL, position = $2
 WHERE id = $1
-RETURNING id, title, completed_at, created_at
+RETURNING id, title, completed_at, position, created_at
 `
 
-func (q *Queries) UncompleteTask(ctx context.Context, id int32) (Task, error) {
-	row := q.db.QueryRow(ctx, uncompleteTask, id)
+type UncompleteTaskParams struct {
+	ID       int32
+	Position int32
+}
+
+func (q *Queries) UncompleteTask(ctx context.Context, arg UncompleteTaskParams) (Task, error) {
+	row := q.db.QueryRow(ctx, uncompleteTask, arg.ID, arg.Position)
 	var i Task
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
 		&i.CompletedAt,
+		&i.Position,
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const updateTaskPosition = `-- name: UpdateTaskPosition :exec
+UPDATE tasks SET position = $2 WHERE id = $1
+`
+
+type UpdateTaskPositionParams struct {
+	ID       int32
+	Position int32
+}
+
+func (q *Queries) UpdateTaskPosition(ctx context.Context, arg UpdateTaskPositionParams) error {
+	_, err := q.db.Exec(ctx, updateTaskPosition, arg.ID, arg.Position)
+	return err
 }

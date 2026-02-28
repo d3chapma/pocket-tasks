@@ -1,16 +1,19 @@
 -- name: ListActiveTasks :many
 SELECT * FROM tasks
 WHERE completed_at IS NULL
-ORDER BY created_at DESC;
+ORDER BY position ASC;
 
 -- name: ListCompletedTasks :many
 SELECT * FROM tasks
 WHERE completed_at IS NOT NULL
 ORDER BY completed_at DESC;
 
+-- name: GetMaxPosition :one
+SELECT COALESCE(MAX(position), 0)::int FROM tasks WHERE completed_at IS NULL;
+
 -- name: CreateTask :one
-INSERT INTO tasks (title)
-VALUES ($1)
+INSERT INTO tasks (title, position)
+VALUES ($1, $2)
 RETURNING *;
 
 -- name: CompleteTask :one
@@ -21,9 +24,12 @@ RETURNING *;
 
 -- name: UncompleteTask :one
 UPDATE tasks
-SET completed_at = NULL
+SET completed_at = NULL, position = $2
 WHERE id = $1
 RETURNING *;
+
+-- name: UpdateTaskPosition :exec
+UPDATE tasks SET position = $2 WHERE id = $1;
 
 -- name: DeleteTask :exec
 DELETE FROM tasks

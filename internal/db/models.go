@@ -12,5 +12,6 @@ type Task struct {
 	ID          int32
 	Title       string
 	CompletedAt pgtype.Timestamp
+	Position    int32
 	CreatedAt   pgtype.Timestamp
 }
