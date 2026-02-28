@@ -138,6 +138,13 @@ func keydownHandler(active []db.Task, completed []db.Task) string {
         const el = items[$selectedIndex]
         if (el) el.querySelector('[data-move-bottom]').click()
       }
+      setTimeout(function() {
+          const items = document.querySelectorAll('#tasks li')
+          const el = items[$selectedIndex]
+          if (el) {
+              el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+          }
+      }, 0)
     `, maxIndex, activeLen, activeLen, activeLen, activeLen, activeLen)
 }
 
