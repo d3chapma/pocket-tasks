@@ -59,219 +59,191 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" tabindex=\"0\"><form data-show=\"$showForm\"><div class=\"input-row\"><input id=\"new-task\" type=\"text\" name=\"title\" placeholder=\"What needs to be done?\" required> <button class=\"btn-primary\" data-on:click=\"@post('/tasks', {contentType: 'form'}); $showForm = false; document.getElementById('new-task').value = ''\">Add</button></div></form><ul>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" tabindex=\"0\"><form data-show=\"$showForm\" class=\"new-task-form\"><div class=\"input-row\"><input id=\"new-task\" type=\"text\" name=\"title\" placeholder=\"What needs to be done?\" required> <button class=\"btn-primary\" data-on:click=\"@post('/tasks', {contentType: 'form'}); $showForm = false; document.getElementById('new-task').value = ''\">Add</button></div></form><div class=\"task-viewport\" data-show=\"!$showForm\"><div class=\"selection-highlight\"></div><div class=\"task-slider\" data-attr:style=\"'--selected: ' + $selectedIndex\"><ul>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		for i, t := range active {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<li data-class:selected=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<li data-id=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var4 string
-			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$selectedIndex == %d", i))
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 24, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 27, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\" data-id=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\"><span class=\"task-title\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var5 string
-			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", t.ID))
+			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(t.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 24, Col: 104}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 28, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\"><span class=\"task-title\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</span><div class=\"task-actions\"><button class=\"btn-primary\" data-toggle data-on:click=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var6 string
-			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(t.Title)
+			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/complete/%d')", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 25, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 30, Col: 112}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</span> <button class=\"btn-primary\" data-toggle data-on:click=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\">Complete</button> <button class=\"btn-primary\" data-delete data-on:click=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var7 string
-			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/complete/%d')", t.ID))
+			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 26, Col: 109}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 31, Col: 137}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\">Complete</button> <button class=\"btn-primary\" data-delete data-on:click=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\">Delete</button> <button style=\"display:none\" data-move-up data-on:click=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var8 string
-			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID))
+			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/move/%d/up')", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 27, Col: 134}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 32, Col: 113}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\">Delete</button> <button style=\"display:none\" data-move-up data-on:click=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\"></button> <button style=\"display:none\" data-move-down data-on:click=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var9 string
-			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/move/%d/up')", t.ID))
+			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/move/%d/down')", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 28, Col: 110}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 33, Col: 117}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\"></button> <button style=\"display:none\" data-move-down data-on:click=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\"></button> <button style=\"display:none\" data-move-top data-on:click=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var10 string
-			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/move/%d/down')", t.ID))
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/move/%d/top')", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 29, Col: 114}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 34, Col: 115}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\"></button> <button style=\"display:none\" data-move-top data-on:click=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\"></button> <button style=\"display:none\" data-move-bottom data-on:click=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var11 string
-			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/move/%d/top')", t.ID))
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/move/%d/bottom')", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 30, Col: 112}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 35, Col: 121}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\"></button> <button style=\"display:none\" data-move-bottom data-on:click=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\"></button></div></li>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if i == len(active)-1 && len(completed) > 0 {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<li class=\"section-divider\" data-show=\"!$hideCompleted\"><span class=\"completed-heading\">Completed</span></li>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+		}
+		if len(active) == 0 && len(completed) > 0 {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<li class=\"section-divider\" data-show=\"!$hideCompleted\"><span class=\"completed-heading\">Completed</span></li>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		for _, t := range completed {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<li data-show=\"!$hideCompleted\"><span class=\"task-title completed\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var12 string
-			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/move/%d/bottom')", t.ID))
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(t.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 31, Col: 118}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 51, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\"></button></li>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</span> <span class=\"timestamp\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var13 string
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(formatTime(t.CompletedAt))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 52, Col: 58}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</span><div class=\"task-actions\"><button class=\"btn-primary\" data-toggle data-on:click=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var14 string
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/uncomplete/%d')", t.ID))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 54, Col: 114}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\">Undo</button> <button class=\"btn-primary\" data-delete data-on:click=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var15 string
+			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 55, Col: 137}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\">Delete</button></div></li>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</ul>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if len(completed) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div data-show=\"!$hideCompleted\" class=\"completed-section\"><h3 class=\"completed-heading\">Completed</h3><ul>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			for i, t := range completed {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<li data-class:selected=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var13 string
-				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("$selectedIndex == %d", i+len(active)))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 40, Col: 82}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\"><span class=\"task-title completed\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var14 string
-				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(t.Title)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 41, Col: 51}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</span> <span class=\"timestamp\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var15 string
-				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(formatTime(t.CompletedAt))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 42, Col: 58}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</span> <button class=\"btn-primary\" data-toggle data-on:click=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var16 string
-				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/uncomplete/%d')", t.ID))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 43, Col: 113}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\">Undo</button> <button class=\"btn-primary\" data-on:click=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var17 string
-				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 44, Col: 124}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\">Delete</button></li>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</ul></div>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</ul></div><div class=\"viewport-fade viewport-fade-top\"></div><div class=\"viewport-fade viewport-fade-bottom\"></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -306,17 +278,17 @@ func keydownHandler(active []db.Task, completed []db.Task) string {
       }
       if (event.key === ' ') {
         event.preventDefault()
-        const items = document.querySelectorAll('#tasks li')
-        const el = items[$selectedIndex]
+        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
+        var el = items[$selectedIndex]
         if (el) {
           el.querySelectorAll('[data-toggle]')[0].click()
         }
       }
       if (event.key === 'y') {
-        const items = document.querySelectorAll('#tasks li')
-        const el = items[$selectedIndex]
+        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
+        var el = items[$selectedIndex]
         if (el) {
-          const title = el.querySelector('.task-title').textContent
+          var title = el.querySelector('.task-title').textContent
           navigator.clipboard.writeText(title)
         }
       }
@@ -329,51 +301,44 @@ func keydownHandler(active []db.Task, completed []db.Task) string {
         $hideCompleted = !$hideCompleted
       }
       if (event.key === 'd') {
-          if (window._pendingD) {
-              clearTimeout(window._pendingD)
-              window._pendingD = null
-              const items = document.querySelectorAll('#tasks li')
-              const el = items[$selectedIndex]
-              if (el) {
-                  el.querySelector('[data-delete]').click()
-              }
-          } else {
-              window._pendingD = setTimeout(function() {
-                  window._pendingD = null
-              }, 500)
+        if (window._pendingD) {
+          clearTimeout(window._pendingD)
+          window._pendingD = null
+          var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
+          var el = items[$selectedIndex]
+          if (el) {
+            el.querySelector('[data-delete]').click()
           }
+        } else {
+          window._pendingD = setTimeout(function() {
+            window._pendingD = null
+          }, 500)
+        }
       }
       if (event.key === 'K' && $selectedIndex < %d && $selectedIndex > 0) {
         event.preventDefault()
-        const items = document.querySelectorAll('#tasks > ul:first-of-type li')
-        const el = items[$selectedIndex]
+        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
+        var el = items[$selectedIndex]
         if (el) el.querySelector('[data-move-up]').click()
       }
       if (event.key === 'J' && $selectedIndex < %d - 1) {
         event.preventDefault()
-        const items = document.querySelectorAll('#tasks > ul:first-of-type li')
-        const el = items[$selectedIndex]
+        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
+        var el = items[$selectedIndex]
         if (el) el.querySelector('[data-move-down]').click()
       }
       if (event.key === 'H' && $selectedIndex < %d && $selectedIndex > 0) {
         event.preventDefault()
-        const items = document.querySelectorAll('#tasks > ul:first-of-type li')
-        const el = items[$selectedIndex]
+        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
+        var el = items[$selectedIndex]
         if (el) el.querySelector('[data-move-top]').click()
       }
       if (event.key === 'L' && $selectedIndex < %d && $selectedIndex < %d - 1) {
         event.preventDefault()
-        const items = document.querySelectorAll('#tasks > ul:first-of-type li')
-        const el = items[$selectedIndex]
+        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
+        var el = items[$selectedIndex]
         if (el) el.querySelector('[data-move-bottom]').click()
       }
-      setTimeout(function() {
-          const items = document.querySelectorAll('#tasks li')
-          const el = items[$selectedIndex]
-          if (el) {
-              el.scrollIntoView({ block: 'center', behavior: 'smooth' })
-          }
-      }, 0)
     `, maxIndex, activeLen, activeLen, activeLen, activeLen, activeLen)
 }
 

@@ -13,40 +13,54 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int) {
 		data-on:keydown__window={ keydownHandler(active, completed) }
 		tabindex="0"
 	>
-		<form data-show="$showForm">
+		<form data-show="$showForm" class="new-task-form">
 			<div class="input-row">
 				<input id="new-task" type="text" name="title" placeholder="What needs to be done?" required/>
 				<button class="btn-primary" data-on:click="@post('/tasks', {contentType: 'form'}); $showForm = false; document.getElementById('new-task').value = ''">Add</button>
 			</div>
 		</form>
-		<ul>
-			for i, t := range active {
-				<li data-class:selected={ fmt.Sprintf("$selectedIndex == %d", i) } data-id={ fmt.Sprintf("%d", t.ID) }>
-					<span class="task-title">{ t.Title }</span>
-					<button class="btn-primary" data-toggle data-on:click={ fmt.Sprintf("@post('/tasks/complete/%d')", t.ID) }>Complete</button>
-					<button class="btn-primary" data-delete data-on:click={ fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID) }>Delete</button>
-					<button style="display:none" data-move-up data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/up')", t.ID) }></button>
-					<button style="display:none" data-move-down data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/down')", t.ID) }></button>
-					<button style="display:none" data-move-top data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/top')", t.ID) }></button>
-					<button style="display:none" data-move-bottom data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/bottom')", t.ID) }></button>
-				</li>
-			}
-		</ul>
-		if len(completed) > 0 {
-			<div data-show="!$hideCompleted" class="completed-section">
-				<h3 class="completed-heading">Completed</h3>
+		<div class="task-viewport" data-show="!$showForm">
+			<div class="selection-highlight"></div>
+			<div class="task-slider" data-attr:style="'--selected: ' + $selectedIndex">
 				<ul>
-					for i, t := range completed {
-						<li data-class:selected={ fmt.Sprintf("$selectedIndex == %d", i+len(active)) }>
+					for i, t := range active {
+						<li data-id={ fmt.Sprintf("%d", t.ID) }>
+							<span class="task-title">{ t.Title }</span>
+							<div class="task-actions">
+								<button class="btn-primary" data-toggle data-on:click={ fmt.Sprintf("@post('/tasks/complete/%d')", t.ID) }>Complete</button>
+								<button class="btn-primary" data-delete data-on:click={ fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID) }>Delete</button>
+								<button style="display:none" data-move-up data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/up')", t.ID) }></button>
+								<button style="display:none" data-move-down data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/down')", t.ID) }></button>
+								<button style="display:none" data-move-top data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/top')", t.ID) }></button>
+								<button style="display:none" data-move-bottom data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/bottom')", t.ID) }></button>
+							</div>
+						</li>
+						if i == len(active) - 1 && len(completed) > 0 {
+							<li class="section-divider" data-show="!$hideCompleted">
+								<span class="completed-heading">Completed</span>
+							</li>
+						}
+					}
+					if len(active) == 0 && len(completed) > 0 {
+						<li class="section-divider" data-show="!$hideCompleted">
+							<span class="completed-heading">Completed</span>
+						</li>
+					}
+					for _, t := range completed {
+						<li data-show="!$hideCompleted">
 							<span class="task-title completed">{ t.Title }</span>
 							<span class="timestamp">{ formatTime(t.CompletedAt) }</span>
-							<button class="btn-primary" data-toggle data-on:click={ fmt.Sprintf("@post('/tasks/uncomplete/%d')", t.ID) }>Undo</button>
-							<button class="btn-primary" data-on:click={ fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID) }>Delete</button>
+							<div class="task-actions">
+								<button class="btn-primary" data-toggle data-on:click={ fmt.Sprintf("@post('/tasks/uncomplete/%d')", t.ID) }>Undo</button>
+								<button class="btn-primary" data-delete data-on:click={ fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID) }>Delete</button>
+							</div>
 						</li>
 					}
 				</ul>
 			</div>
-		}
+			<div class="viewport-fade viewport-fade-top"></div>
+			<div class="viewport-fade viewport-fade-bottom"></div>
+		</div>
 	</div>
 }
 
@@ -77,17 +91,17 @@ func keydownHandler(active []db.Task, completed []db.Task) string {
       }
       if (event.key === ' ') {
         event.preventDefault()
-        const items = document.querySelectorAll('#tasks li')
-        const el = items[$selectedIndex]
+        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
+        var el = items[$selectedIndex]
         if (el) {
           el.querySelectorAll('[data-toggle]')[0].click()
         }
       }
       if (event.key === 'y') {
-        const items = document.querySelectorAll('#tasks li')
-        const el = items[$selectedIndex]
+        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
+        var el = items[$selectedIndex]
         if (el) {
-          const title = el.querySelector('.task-title').textContent
+          var title = el.querySelector('.task-title').textContent
           navigator.clipboard.writeText(title)
         }
       }
@@ -100,51 +114,44 @@ func keydownHandler(active []db.Task, completed []db.Task) string {
         $hideCompleted = !$hideCompleted
       }
       if (event.key === 'd') {
-          if (window._pendingD) {
-              clearTimeout(window._pendingD)
-              window._pendingD = null
-              const items = document.querySelectorAll('#tasks li')
-              const el = items[$selectedIndex]
-              if (el) {
-                  el.querySelector('[data-delete]').click()
-              }
-          } else {
-              window._pendingD = setTimeout(function() {
-                  window._pendingD = null
-              }, 500)
+        if (window._pendingD) {
+          clearTimeout(window._pendingD)
+          window._pendingD = null
+          var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
+          var el = items[$selectedIndex]
+          if (el) {
+            el.querySelector('[data-delete]').click()
           }
+        } else {
+          window._pendingD = setTimeout(function() {
+            window._pendingD = null
+          }, 500)
+        }
       }
       if (event.key === 'K' && $selectedIndex < %d && $selectedIndex > 0) {
         event.preventDefault()
-        const items = document.querySelectorAll('#tasks > ul:first-of-type li')
-        const el = items[$selectedIndex]
+        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
+        var el = items[$selectedIndex]
         if (el) el.querySelector('[data-move-up]').click()
       }
       if (event.key === 'J' && $selectedIndex < %d - 1) {
         event.preventDefault()
-        const items = document.querySelectorAll('#tasks > ul:first-of-type li')
-        const el = items[$selectedIndex]
+        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
+        var el = items[$selectedIndex]
         if (el) el.querySelector('[data-move-down]').click()
       }
       if (event.key === 'H' && $selectedIndex < %d && $selectedIndex > 0) {
         event.preventDefault()
-        const items = document.querySelectorAll('#tasks > ul:first-of-type li')
-        const el = items[$selectedIndex]
+        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
+        var el = items[$selectedIndex]
         if (el) el.querySelector('[data-move-top]').click()
       }
       if (event.key === 'L' && $selectedIndex < %d && $selectedIndex < %d - 1) {
         event.preventDefault()
-        const items = document.querySelectorAll('#tasks > ul:first-of-type li')
-        const el = items[$selectedIndex]
+        var items = document.querySelectorAll('.task-slider li:not(.section-divider)')
+        var el = items[$selectedIndex]
         if (el) el.querySelector('[data-move-bottom]').click()
       }
-      setTimeout(function() {
-          const items = document.querySelectorAll('#tasks li')
-          const el = items[$selectedIndex]
-          if (el) {
-              el.scrollIntoView({ block: 'center', behavior: 'smooth' })
-          }
-      }, 0)
     `, maxIndex, activeLen, activeLen, activeLen, activeLen, activeLen)
 }
 
