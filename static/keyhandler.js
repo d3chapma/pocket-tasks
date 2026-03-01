@@ -38,6 +38,23 @@ function handleKeydown(event, state) {
       }
       break;
 
+    case "g":
+      if (window._pendingG) {
+        clearTimeout(window._pendingG);
+        window._pendingG = null;
+        selectedIndex = 0;
+      } else {
+        window._pendingG = setTimeout(function () {
+          window._pendingG = null;
+        }, 500);
+      }
+      break;
+
+    case "G":
+      event.preventDefault();
+      selectedIndex = maxIndex;
+      break;
+
     case "i":
       event.preventDefault();
       setTimeout(function () {
@@ -97,9 +114,7 @@ function handleKeydown(event, state) {
 }
 
 function clickSelected(selectedIndex, selector) {
-  const items = document.querySelectorAll(
-    ".task-slider li:not(.section-divider)",
-  );
+  const items = document.querySelectorAll(".task-slider li[data-task]");
   const el = items[selectedIndex];
   if (el) {
     const btn = el.querySelector(selector);
@@ -108,9 +123,7 @@ function clickSelected(selectedIndex, selector) {
 }
 
 function copySelected(selectedIndex) {
-  const items = document.querySelectorAll(
-    ".task-slider li:not(.section-divider)",
-  );
+  const items = document.querySelectorAll(".task-slider li[data-task]");
   const el = items[selectedIndex];
   if (el) {
     const title = el.querySelector(".task-title");

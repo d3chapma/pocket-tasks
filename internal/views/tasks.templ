@@ -32,10 +32,13 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int) {
 		</form>
 		<div class="task-viewport" data-show="!$showForm">
 			<div class="selection-highlight"></div>
-			<div class="task-slider" data-attr:style="'--selected: ' + $selectedIndex">
+			<div
+				class="task-slider"
+				data-attr:style={ fmt.Sprintf("'--selected: ' + ($selectedIndex < %d ? $selectedIndex : $selectedIndex + 1)", len(active)) }
+			>
 				<ul>
 					for i, t := range active {
-						<li data-id={ fmt.Sprintf("%d", t.ID) }>
+						<li data-task data-id={ fmt.Sprintf("%d", t.ID) }>
 							<span class="task-title">{ t.Title }</span>
 							<div class="task-actions">
 								<button class="btn-primary" data-toggle data-on:click={ fmt.Sprintf("@post('/tasks/complete/%d')", t.ID) }>Complete</button>
@@ -58,7 +61,7 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int) {
 						</li>
 					}
 					for _, t := range completed {
-						<li data-show="!$hideCompleted">
+						<li data-task data-show="!$hideCompleted">
 							<span class="task-title completed">{ t.Title }</span>
 							<span class="timestamp">{ formatTime(t.CompletedAt) }</span>
 							<div class="task-actions">
