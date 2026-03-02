@@ -83,22 +83,56 @@ func main() {
 		}
 
 		title := r.FormValue("title")
+		selectedIndex, _ := strconv.Atoi(r.URL.Query().Get("selectedIndex"))
 
-		maxPos, err := queries.GetMaxPosition(r.Context())
-		if err != nil {
-			maxPos = 0
+		active, _ := queries.ListActiveTasks(r.Context())
+		_, _ = queries.ListCompletedTasks(r.Context())
+
+		// Determine insert position
+		var insertAfterIdx int
+		if selectedIndex < len(active) {
+			insertAfterIdx = selectedIndex
+		} else {
+			insertAfterIdx = len(active) - 1
 		}
 
-		_, err = queries.CreateTask(r.Context(), db.CreateTaskParams{
+		// Calculate the new task's position value
+		var newPosition int32
+		if len(active) == 0 {
+			newPosition = 1
+		} else if insertAfterIdx == len(active)-1 {
+			// Insert at the end
+			newPosition = active[insertAfterIdx].Position + 1
+		} else {
+			// Insert between two tasks - shift everything below down
+			newPosition = active[insertAfterIdx].Position + 1
+			for i := insertAfterIdx + 1; i < len(active); i++ {
+				_ = queries.UpdateTaskPosition(r.Context(), db.UpdateTaskPositionParams{
+					ID:       active[i].ID,
+					Position: active[i].Position + 1,
+				})
+			}
+		}
+
+		_, err := queries.CreateTask(r.Context(), db.CreateTaskParams{
 			Title:    title,
-			Position: maxPos + 1,
+			Position: newPosition,
 		})
 		if err != nil {
 			http.Error(w, "Failed to create task", 500)
 			return
 		}
 
-		renderTasks(w, r, queries, 0)
+		active, _ = queries.ListActiveTasks(r.Context())
+		completed, _ := queries.ListCompletedTasks(r.Context())
+
+		// Select the newly created task (it's right after insertAfterIdx)
+		newSelectedIndex := insertAfterIdx + 1
+		if len(active) == 1 {
+			newSelectedIndex = 0
+		}
+
+		_ = views.TaskList(active, completed, newSelectedIndex).Render(r.Context(), w)
 	})
 
 	r.Post("/tasks/complete/{id}", func(w http.ResponseWriter, r *http.Request) {
