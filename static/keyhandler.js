@@ -127,6 +127,23 @@ function copySelected(selectedIndex) {
   const el = items[selectedIndex];
   if (el) {
     const title = el.querySelector(".task-title");
-    if (title) navigator.clipboard.writeText(title.textContent);
+    if (title) {
+      navigator.clipboard.writeText(title.textContent);
+      showToast("Yanked.");
+    }
   }
+}
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.add("visible");
+
+  if (window._toastTimeout) {
+    clearTimeout(window._toastTimeout);
+  }
+
+  window._toastTimeout = setTimeout(function () {
+    toast.classList.remove("visible");
+  }, 2000);
 }
