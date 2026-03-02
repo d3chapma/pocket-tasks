@@ -191,10 +191,6 @@ button:active {
   border-radius: 6px;
 }
 
-.task-slider li:hover .task-actions {
-  opacity: 1;
-}
-
 .task-actions button {
   font-size: 12px;
   padding: 5px 10px;
