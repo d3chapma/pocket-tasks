@@ -197,14 +197,14 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 				return templ_7745c5c3_Err
 			}
 			if i == len(active)-1 && len(completed) > 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<li class=\"section-divider\" data-show=\"!$hideCompleted\"><span class=\"completed-heading\">Completed</span></li>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<li class=\"section-divider\" data-show=\"!$hideCompleted\"><span class=\"completed-heading\">Completed Today</span></li>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
 		}
 		if len(active) == 0 && len(completed) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<li class=\"section-divider\" data-show=\"!$hideCompleted\"><span class=\"completed-heading\">Completed</span></li>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<li class=\"section-divider\" data-show=\"!$hideCompleted\"><span class=\"completed-heading\">Completed Today</span></li>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

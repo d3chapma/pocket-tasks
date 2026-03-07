@@ -6,6 +6,8 @@ ORDER BY position ASC;
 -- name: ListCompletedTasks :many
 SELECT * FROM tasks
 WHERE completed_at IS NOT NULL
+  AND completed_at >= CURRENT_DATE
+  AND completed_at < CURRENT_DATE + INTERVAL '1 day'
 ORDER BY completed_at DESC;
 
 -- name: GetMaxPosition :one

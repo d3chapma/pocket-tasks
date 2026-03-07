@@ -109,6 +109,8 @@ func (q *Queries) ListActiveTasks(ctx context.Context) ([]Task, error) {
 const listCompletedTasks = `-- name: ListCompletedTasks :many
 SELECT id, title, completed_at, position, created_at FROM tasks
 WHERE completed_at IS NOT NULL
+  AND completed_at >= CURRENT_DATE
+  AND completed_at < CURRENT_DATE + INTERVAL '1 day'
 ORDER BY completed_at DESC
 `
 

@@ -50,13 +50,13 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int) {
 						</li>
 						if i == len(active) - 1 && len(completed) > 0 {
 							<li class="section-divider" data-show="!$hideCompleted">
-								<span class="completed-heading">Completed</span>
+								<span class="completed-heading">Completed Today</span>
 							</li>
 						}
 					}
 					if len(active) == 0 && len(completed) > 0 {
 						<li class="section-divider" data-show="!$hideCompleted">
-							<span class="completed-heading">Completed</span>
+							<span class="completed-heading">Completed Today</span>
 						</li>
 					}
 					for _, t := range completed {
