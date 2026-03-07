@@ -1,301 +1,316 @@
 :root {
-  --bg: #f0f2f5;
-  --card: #ffffff;
-  --border: #e2e8f0;
-  --text: #1e293b;
-  --muted: #94a3b8;
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-light: #eef2ff;
-  --danger: #ef4444;
-  --danger-hover: #dc2626;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.1);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --item-height: 80px;
+    --bg: #f0f2f5;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --muted: #94a3b8;
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --primary-light: #eef2ff;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.1);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --item-height: 80px;
 }
 
 * {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 body {
-  font-family:
-    "Inter",
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 0 16px;
-  overflow: hidden;
+    font-family:
+        "Inter",
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 0 16px;
+    overflow: hidden;
 }
 
 .app {
-  width: 100%;
-  max-width: 560px;
+    width: 100%;
+    max-width: 560px;
 }
 
 h1 {
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 20px;
-  letter-spacing: -0.5px;
-  color: var(--text);
-  text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    text-align: center;
 }
 
 /* Form */
 .new-task-form {
-  padding: 20px;
+    padding: 20px;
 }
 
 input[type="text"] {
-  width: 100%;
-  padding: 12px 16px;
-  border-radius: var(--radius-sm);
-  border: 2px solid var(--border);
-  font-size: 15px;
-  font-family: inherit;
-  color: var(--text);
-  background: var(--bg);
-  transition:
-    border-color var(--transition),
-    box-shadow var(--transition);
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border);
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--bg);
+    transition:
+        border-color var(--transition),
+        box-shadow var(--transition);
 }
 
 input[type="text"]::placeholder {
-  color: var(--muted);
+    color: var(--muted);
 }
 
 input[type="text"]:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  background: white;
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    background: white;
 }
 
 button {
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  transition: all var(--transition);
-  white-space: nowrap;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
 }
 
 button:active {
-  transform: scale(0.96);
+    transform: scale(0.96);
 }
 
 .btn-primary {
-  background: var(--primary);
-  color: white;
-  box-shadow: var(--shadow-sm);
+    background: var(--primary);
+    color: white;
+    box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover {
-  background: var(--primary-hover);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+    background: var(--primary-hover);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
 }
 
 .input-row {
-  display: flex;
-  gap: 10px;
+    display: flex;
+    gap: 10px;
 }
 
 /* Viewport */
 .task-viewport {
-  position: relative;
-  height: 70vh;
-  overflow: hidden;
+    position: relative;
+    height: 70vh;
+    overflow: hidden;
 }
 
 .selection-highlight {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: var(--item-height);
-  transform: translateY(-50%);
-  background: var(--primary-light);
-  border: 2px solid var(--primary);
-  border-radius: var(--radius-sm);
-  pointer-events: none;
-  z-index: 1;
-  transition: opacity var(--transition);
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: var(--item-height);
+    transform: translateY(-50%);
+    background: var(--primary-light);
+    border: 2px solid var(--primary);
+    border-radius: var(--radius-sm);
+    pointer-events: none;
+    z-index: 1;
+    transition: opacity var(--transition);
 }
 
 .task-slider {
-  position: relative;
-  z-index: 2;
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translateY(
-    calc(35vh - var(--selected) * var(--item-height) - var(--item-height) / 2)
-  );
+    position: relative;
+    z-index: 2;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(
+        calc(
+            35vh - var(--selected) * var(--item-height) - var(--item-height) / 2
+        )
+    );
 }
 
 .task-slider ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
 .task-slider li {
-  display: flex;
-  align-items: center;
-  height: var(--item-height);
-  padding: 0 14px;
-  border-radius: var(--radius-sm);
-  position: relative;
+    display: flex;
+    align-items: center;
+    height: var(--item-height);
+    padding: 0 14px;
+    border-radius: var(--radius-sm);
+    position: relative;
 }
 
 .task-title {
-  flex: 1;
-  font-size: 15px;
-  line-height: 1.5;
+    flex: 1;
+    font-size: 15px;
+    line-height: 1.5;
 }
 
 .completed {
-  text-decoration: line-through;
-  color: var(--muted);
+    text-decoration: line-through;
+    color: var(--muted);
 }
 
 .task-actions {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  gap: 6px;
-  opacity: 0;
-  transition: opacity var(--transition);
-  background: var(--primary-light);
-  padding: 4px 8px;
-  border-radius: 6px;
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity var(--transition);
+    background: var(--primary-light);
+    padding: 4px 8px;
+    border-radius: 6px;
 }
 
 .task-actions button {
-  font-size: 12px;
-  padding: 5px 10px;
-  border-radius: 6px;
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 6px;
 }
 
 .task-actions button[data-toggle] {
-  background: var(--primary-light);
-  color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary);
 }
 
 .task-actions button[data-toggle]:hover {
-  background: var(--primary);
-  color: white;
+    background: var(--primary);
+    color: white;
 }
 
 .task-actions button[data-delete] {
-  background: transparent;
-  color: var(--danger);
+    background: transparent;
+    color: var(--danger);
 }
 
 .task-actions button[data-delete]:hover {
-  background: #fef2f2;
-  color: var(--danger-hover);
+    background: #fef2f2;
+    color: var(--danger-hover);
 }
 
 .timestamp {
-  font-size: 12px;
-  color: var(--muted);
-  white-space: nowrap;
-  margin-right: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    margin-right: 8px;
 }
 
 /* Section divider */
+.task-slider li.section-empty {
+    height: auto;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    padding: 4px 0;
+}
+
+.muted {
+    font-size: 14px;
+    color: var(--muted);
+}
+
 .section-divider {
-  height: var(--item-height);
-  display: flex;
-  align-items: center;
-  pointer-events: none;
+    height: var(--item-height);
+    display: flex;
+    align-items: center;
+    pointer-events: none;
 }
 
 .completed-heading {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 /* Fade edges */
 .viewport-fade {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 120px;
-  pointer-events: none;
-  z-index: 3;
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 120px;
+    pointer-events: none;
+    z-index: 3;
 }
 
 .viewport-fade-top {
-  top: 0;
-  background: linear-gradient(to bottom, var(--bg) 0%, transparent 100%);
+    top: 0;
+    background: linear-gradient(to bottom, var(--bg) 0%, transparent 100%);
 }
 
 .viewport-fade-bottom {
-  bottom: 0;
-  background: linear-gradient(to top, var(--bg) 0%, transparent 100%);
+    bottom: 0;
+    background: linear-gradient(to top, var(--bg) 0%, transparent 100%);
 }
 
 /* Empty state */
 .task-slider ul:empty::after {
-  content: "Press i to add a task";
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: var(--item-height);
-  color: var(--muted);
-  font-size: 14px;
+    content: "Press i to add a task";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--item-height);
+    color: var(--muted);
+    font-size: 14px;
 }
 
 .toast {
-  position: fixed;
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: var(--text);
-  color: white;
-  padding: 10px 20px;
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-weight: 500;
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
-  z-index: 100;
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text);
+    color: white;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+    z-index: 100;
 }
 
 .toast.visible {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
 }
 @media (max-width: 500px) {
-  .input-row {
-    flex-direction: column;
-  }
+    .input-row {
+        flex-direction: column;
+    }
 }
