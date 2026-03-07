@@ -22,7 +22,6 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int) {
 			$showForm = result.showForm;
 			$hideCompleted = result.hideCompleted
 		`, maxIndex(active, completed), len(active)) }
-		tabindex="-1"
 	>
 		<form data-show="$showForm" class="new-task-form">
 			<div class="input-row">

@@ -70,14 +70,14 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" tabindex=\"-1\"><form data-show=\"$showForm\" class=\"new-task-form\"><div class=\"input-row\"><input id=\"new-task\" type=\"text\" name=\"title\" placeholder=\"What needs to be done?\" required> <button class=\"btn-primary\" data-on:click=\"@post('/tasks?selectedIndex=' + $selectedIndex, {contentType: 'form'}); $showForm = false; document.getElementById('new-task').value = ''\">Add</button></div></form><div class=\"task-viewport\" data-show=\"!$showForm\"><div class=\"selection-highlight\"></div><div class=\"task-slider\" data-attr:style=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\"><form data-show=\"$showForm\" class=\"new-task-form\"><div class=\"input-row\"><input id=\"new-task\" type=\"text\" name=\"title\" placeholder=\"What needs to be done?\" required> <button class=\"btn-primary\" data-on:click=\"@post('/tasks?selectedIndex=' + $selectedIndex, {contentType: 'form'}); $showForm = false; document.getElementById('new-task').value = ''\">Add</button></div></form><div class=\"task-viewport\" data-show=\"!$showForm\"><div class=\"selection-highlight\"></div><div class=\"task-slider\" data-attr:style=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("'--selected: ' + ($selectedIndex < %d ? $selectedIndex : $selectedIndex + 1)", len(active)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 37, Col: 126}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 36, Col: 126}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -95,7 +95,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 41, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 40, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -108,7 +108,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(t.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 42, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 41, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -121,7 +121,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/complete/%d')", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 44, Col: 112}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 43, Col: 112}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -134,7 +134,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 45, Col: 137}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 44, Col: 137}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -147,7 +147,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/move/%d/up')", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 46, Col: 113}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 45, Col: 113}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -160,7 +160,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/move/%d/down')", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 47, Col: 117}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 46, Col: 117}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -173,7 +173,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/move/%d/top')", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 48, Col: 115}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 47, Col: 115}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -186,7 +186,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/move/%d/bottom')", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 49, Col: 121}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 48, Col: 121}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -217,7 +217,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(t.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 65, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 64, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -230,7 +230,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(formatTime(t.CompletedAt))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 66, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 65, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -243,7 +243,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@post('/tasks/uncomplete/%d')", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 68, Col: 114}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 67, Col: 114}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -256,7 +256,7 @@ func TaskList(active []db.Task, completed []db.Task, selectedIndex int) templ.Co
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 69, Col: 137}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/tasks.templ`, Line: 68, Col: 137}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
