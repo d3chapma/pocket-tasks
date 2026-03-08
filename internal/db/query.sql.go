@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const completeTask = `-- name: CompleteTask :one
@@ -74,6 +76,22 @@ func (q *Queries) GetMaxPosition(ctx context.Context) (int32, error) {
 	return column_1, err
 }
 
+const getPrevCompletedDate = `-- name: GetPrevCompletedDate :one
+SELECT DATE_TRUNC('day', completed_at)::timestamp as day
+FROM tasks
+WHERE completed_at IS NOT NULL
+  AND DATE_TRUNC('day', completed_at) < $1::timestamp
+ORDER BY completed_at DESC
+LIMIT 1
+`
+
+func (q *Queries) GetPrevCompletedDate(ctx context.Context, dollar_1 pgtype.Timestamp) (pgtype.Timestamp, error) {
+	row := q.db.QueryRow(ctx, getPrevCompletedDate, dollar_1)
+	var day pgtype.Timestamp
+	err := row.Scan(&day)
+	return day, err
+}
+
 const listActiveTasks = `-- name: ListActiveTasks :many
 SELECT id, title, completed_at, position, created_at FROM tasks
 WHERE completed_at IS NULL
@@ -116,6 +134,79 @@ ORDER BY completed_at DESC
 
 func (q *Queries) ListCompletedTasks(ctx context.Context) ([]Task, error) {
 	rows, err := q.db.Query(ctx, listCompletedTasks)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Task
+	for rows.Next() {
+		var i Task
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.CompletedAt,
+			&i.Position,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCompletedTasksForDate = `-- name: ListCompletedTasksForDate :many
+SELECT id, title, completed_at, position, created_at FROM tasks
+WHERE completed_at IS NOT NULL
+  AND completed_at >= $1::timestamp
+  AND completed_at < $1::timestamp + INTERVAL '1 day'
+ORDER BY completed_at DESC
+`
+
+func (q *Queries) ListCompletedTasksForDate(ctx context.Context, dollar_1 pgtype.Timestamp) ([]Task, error) {
+	rows, err := q.db.Query(ctx, listCompletedTasksForDate, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Task
+	for rows.Next() {
+		var i Task
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.CompletedAt,
+			&i.Position,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listHistoricalCompletedTasks = `-- name: ListHistoricalCompletedTasks :many
+SELECT id, title, completed_at, position, created_at FROM tasks
+WHERE completed_at IS NOT NULL
+  AND completed_at >= $1::timestamp
+  AND completed_at < $2::timestamp
+ORDER BY completed_at DESC
+`
+
+type ListHistoricalCompletedTasksParams struct {
+	Column1 pgtype.Timestamp
+	Column2 pgtype.Timestamp
+}
+
+func (q *Queries) ListHistoricalCompletedTasks(ctx context.Context, arg ListHistoricalCompletedTasksParams) ([]Task, error) {
+	rows, err := q.db.Query(ctx, listHistoricalCompletedTasks, arg.Column1, arg.Column2)
 	if err != nil {
 		return nil, err
 	}

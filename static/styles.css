@@ -240,6 +240,7 @@ button:active {
     color: var(--muted);
 }
 
+
 .section-divider {
     height: var(--item-height);
     display: flex;

@@ -7,13 +7,19 @@ function handleKeydown(event, state) {
     return state;
   }
 
-  let { selectedIndex, hideCompleted } = state;
+  let { selectedIndex } = state;
   const maxIndex = state.maxIndex;
+  let loadHistory = false;
 
   switch (event.key) {
     case "j":
       event.preventDefault();
-      selectedIndex = Math.min(selectedIndex + 1, maxIndex);
+      if (selectedIndex < maxIndex) {
+        selectedIndex++;
+      }
+      if (selectedIndex === maxIndex - 1) {
+        loadHistory = true;
+      }
       break;
 
     case "k":
@@ -53,6 +59,7 @@ function handleKeydown(event, state) {
     case "G":
       event.preventDefault();
       selectedIndex = maxIndex;
+      loadHistory = true;
       break;
 
     case "i":
@@ -61,10 +68,6 @@ function handleKeydown(event, state) {
         document.getElementById("new-task").focus();
       }, 0);
       return { ...state, showForm: true };
-
-    case "x":
-      hideCompleted = !hideCompleted;
-      break;
 
     case "d":
       if (window._pendingD) {
@@ -114,7 +117,19 @@ function handleKeydown(event, state) {
       break;
   }
 
-  return { ...state, selectedIndex, hideCompleted };
+  return { ...state, selectedIndex, loadHistory };
+}
+
+function rowOffset(breakpoints, idx) {
+  var offset = 0;
+  for (var i = 0; i < breakpoints.length; i++) {
+    if (idx >= breakpoints[i][0]) {
+      offset = breakpoints[i][1];
+    } else {
+      break;
+    }
+  }
+  return idx + offset;
 }
 
 function clickSelected(selectedIndex, selector) {

@@ -4,24 +4,26 @@ import "github.com/d3chapma/pocket-tasks/internal/db"
 import "fmt"
 import "github.com/jackc/pgx/v5/pgtype"
 
-templ TaskList(active []db.Task, completed []db.Task, selectedIndex int) {
+templ TaskList(active []db.Task, completed []db.Task, selectedIndex int, completedLabel string, prevDate string, historyDays []CompletedDay) {
 	<div
 		id="tasks"
 		data-signals:selected-index={ fmt.Sprintf("%d", selectedIndex) }
 		data-signals:show-form="false"
-		data-signals:hide-completed="false"
 		data-on:keydown__window={ fmt.Sprintf(`
 			var result = handleKeydown(event, {
 				selectedIndex: $selectedIndex,
 				showForm: $showForm,
-				hideCompleted: $hideCompleted,
 				maxIndex: %d,
 				activeLen: %d
 			});
 			$selectedIndex = result.selectedIndex;
 			$showForm = result.showForm;
-			$hideCompleted = result.hideCompleted
-		`, maxIndex(active, completed), len(active)) }
+			if (result.loadHistory) {
+				var loadBtn = document.querySelector('[data-load-history]');
+				if (loadBtn) loadBtn.click();
+			}
+		`, maxIndex(active, completed, historyDays), len(active)) }
+		tabindex="0"
 	>
 		<form data-show="$showForm" class="new-task-form">
 			<div class="input-row">
@@ -33,7 +35,7 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int) {
 			<div class="selection-highlight"></div>
 			<div
 				class="task-slider"
-				data-attr:style={ fmt.Sprintf("'--selected: ' + ($selectedIndex < %d ? $selectedIndex : $selectedIndex + 1)", len(active)) }
+				data-attr:style={ fmt.Sprintf("'--selected: ' + rowOffset(%s, $selectedIndex)", computeRowBreakpoints(active, completed, historyDays)) }
 			>
 				<ul>
 					for i, t := range active {
@@ -48,27 +50,24 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int) {
 								<button style="display:none" data-move-bottom data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/bottom')", t.ID) }></button>
 							</div>
 						</li>
-						if i == len(active) - 1 && len(completed) > 0 {
-							<li class="section-divider" data-show="!$hideCompleted">
-								<span class="completed-heading">Completed Today</span>
+						if i == len(active) - 1 {
+							<li class="section-divider">
+								<span class="completed-heading">{ completedLabel }</span>
 							</li>
 						}
 					}
-					if len(active) == 0 && len(completed) > 0 {
-						<li class="section-divider" data-show="!$hideCompleted">
-							<span class="completed-heading">Completed Today</span>
+					if len(active) == 0 {
+						<li class="section-divider">
+							<span class="completed-heading">{ completedLabel }</span>
 						</li>
 					}
 					if len(completed) == 0 {
-						<li class="section-divider" data-show="!$hideCompleted">
-							<span class="completed-heading">Completed Today</span>
-						</li>
-						<li class="section-empty" data-show="!$hideCompleted">
+						<li class="section-empty">
 							<span class="muted">Nothing yet 🥺</span>
 						</li>
 					}
 					for _, t := range completed {
-						<li data-task data-show="!$hideCompleted">
+						<li data-task>
 							<span class="task-title completed">{ t.Title }</span>
 							<span class="timestamp">{ formatTime(t.CompletedAt) }</span>
 							<div class="task-actions">
@@ -77,7 +76,25 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int) {
 							</div>
 						</li>
 					}
+					for _, day := range historyDays {
+						<li class="section-divider">
+							<span class="completed-heading">Completed { day.Label }</span>
+						</li>
+						for _, t := range day.Tasks {
+							<li data-task>
+								<span class="task-title completed">{ t.Title }</span>
+								<span class="timestamp">{ formatTime(t.CompletedAt) }</span>
+								<div class="task-actions">
+									<button class="btn-primary" data-toggle data-on:click={ fmt.Sprintf("@post('/tasks/uncomplete/%d')", t.ID) }>Undo</button>
+									<button class="btn-primary" data-delete data-on:click={ fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID) }>Delete</button>
+								</div>
+							</li>
+						}
+					}
 				</ul>
+				if prevDate != "" {
+					<button style="display:none" data-load-history data-on:click={ fmt.Sprintf("@get('/tasks/history?oldest=%s&selectedIndex=' + $selectedIndex)", prevDate) }></button>
+				}
 			</div>
 			<div class="viewport-fade viewport-fade-top"></div>
 			<div class="viewport-fade viewport-fade-bottom"></div>
@@ -85,12 +102,36 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int) {
 	</div>
 }
 
-func maxIndex(active []db.Task, completed []db.Task) int {
+func maxIndex(active []db.Task, completed []db.Task, historyDays []CompletedDay) int {
 	total := len(active) + len(completed)
+	for _, day := range historyDays {
+		total += len(day.Tasks)
+	}
 	if total == 0 {
 		return 0
 	}
 	return total - 1
+}
+
+// computeRowBreakpoints returns a JS array literal mapping task indices to row offsets.
+// Each history day section header adds 1 to the offset for tasks below it.
+func computeRowBreakpoints(active []db.Task, completed []db.Task, historyDays []CompletedDay) string {
+	// Active region starts at index 0 with offset 0
+	result := "[[0,0]"
+	// Completed today region: offset +1 for the "Completed Today" section header
+	result += fmt.Sprintf(",[%d,1]", len(active))
+	// Each history day adds another +1 for its section header
+	emptyBonus := 0
+	if len(completed) == 0 {
+		emptyBonus = 1 // "Nothing yet" row also adds to the offset
+	}
+	taskIdx := len(active) + len(completed)
+	for k, day := range historyDays {
+		result += fmt.Sprintf(",[%d,%d]", taskIdx, 2+k+emptyBonus)
+		taskIdx += len(day.Tasks)
+	}
+	result += "]"
+	return result
 }
 
 func formatTime(t pgtype.Timestamp) string {

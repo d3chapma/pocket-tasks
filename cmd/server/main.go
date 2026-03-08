@@ -8,20 +8,60 @@ import (
 	"os"
 	"slices"
 	"strconv"
+	"time"
 
 	"github.com/d3chapma/pocket-tasks/db/migrations"
 	"github.com/d3chapma/pocket-tasks/internal/db"
 	"github.com/d3chapma/pocket-tasks/internal/views"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 )
 
+func startOfDay(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
+}
+
+func prevDateFor(ctx context.Context, queries *db.Queries, day time.Time) string {
+	ts := pgtype.Timestamp{Time: day, Valid: true}
+	if _, err := queries.GetPrevCompletedDate(ctx, ts); err == nil {
+		return day.Format("2006-01-02")
+	}
+	return ""
+}
+
+func groupTasksByDay(tasks []db.Task) []views.CompletedDay {
+	var days []views.CompletedDay
+	var curDay time.Time
+	var curTasks []db.Task
+	for _, t := range tasks {
+		if !t.CompletedAt.Valid {
+			continue
+		}
+		day := startOfDay(t.CompletedAt.Time)
+		if !day.Equal(curDay) {
+			if len(curTasks) > 0 {
+				days = append(days, views.CompletedDay{Label: curDay.Format("Mon Jan 2"), Tasks: curTasks})
+			}
+			curDay = day
+			curTasks = []db.Task{t}
+		} else {
+			curTasks = append(curTasks, t)
+		}
+	}
+	if len(curTasks) > 0 {
+		days = append(days, views.CompletedDay{Label: curDay.Format("Mon Jan 2"), Tasks: curTasks})
+	}
+	return days
+}
+
 func renderTasks(w http.ResponseWriter, r *http.Request, queries *db.Queries, selectedIndex int) {
-	active, _ := queries.ListActiveTasks(r.Context())
-	completed, _ := queries.ListCompletedTasks(r.Context())
+	ctx := r.Context()
+	active, _ := queries.ListActiveTasks(ctx)
+	completed, _ := queries.ListCompletedTasks(ctx)
 
 	total := len(active) + len(completed)
 	if selectedIndex >= total {
@@ -31,7 +71,8 @@ func renderTasks(w http.ResponseWriter, r *http.Request, queries *db.Queries, se
 		selectedIndex = 0
 	}
 
-	_ = views.TaskList(active, completed, selectedIndex).Render(r.Context(), w)
+	today := startOfDay(time.Now().UTC())
+	_ = views.TaskList(active, completed, selectedIndex, "Completed Today", prevDateFor(ctx, queries, today), nil).Render(ctx, w)
 }
 
 func main() {
@@ -82,8 +123,9 @@ func main() {
 			return
 		}
 
+		today := startOfDay(time.Now().UTC())
 		_ = views.Layout(
-			views.TaskList(active, completed, 0),
+			views.TaskList(active, completed, 0, "Completed Today", prevDateFor(r.Context(), queries, today), nil),
 		).Render(r.Context(), w)
 	})
 
@@ -143,7 +185,8 @@ func main() {
 			newSelectedIndex = 0
 		}
 
-		_ = views.TaskList(active, completed, newSelectedIndex).Render(r.Context(), w)
+		today := startOfDay(time.Now().UTC())
+		_ = views.TaskList(active, completed, newSelectedIndex, "Completed Today", prevDateFor(r.Context(), queries, today), nil).Render(r.Context(), w)
 	})
 
 	r.Post("/tasks/complete/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -170,7 +213,8 @@ func main() {
 			newIndex = total - 1
 		}
 
-		_ = views.TaskList(active, completed, newIndex).Render(r.Context(), w)
+		today := startOfDay(time.Now().UTC())
+		_ = views.TaskList(active, completed, newIndex, "Completed Today", prevDateFor(r.Context(), queries, today), nil).Render(r.Context(), w)
 	})
 
 	r.Post("/tasks/uncomplete/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -201,7 +245,8 @@ func main() {
 			newIndex = 0
 		}
 
-		_ = views.TaskList(active, completed, newIndex).Render(r.Context(), w)
+		today := startOfDay(time.Now().UTC())
+		_ = views.TaskList(active, completed, newIndex, "Completed Today", prevDateFor(r.Context(), queries, today), nil).Render(r.Context(), w)
 	})
 
 	r.Post("/tasks/move/{id}/{direction}", func(w http.ResponseWriter, r *http.Request) {
@@ -265,7 +310,57 @@ func main() {
 		}
 
 		completed, _ := queries.ListCompletedTasks(r.Context())
-		_ = views.TaskList(active, completed, newIdx).Render(r.Context(), w)
+		today := startOfDay(time.Now().UTC())
+		_ = views.TaskList(active, completed, newIdx, "Completed Today", prevDateFor(r.Context(), queries, today), nil).Render(r.Context(), w)
+	})
+
+	r.Get("/tasks/history", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		oldestStr := r.URL.Query().Get("oldest")
+		oldest, err := time.Parse("2006-01-02", oldestStr)
+		if err != nil {
+			http.Error(w, "Invalid date", http.StatusBadRequest)
+			return
+		}
+
+		oldestDay := startOfDay(oldest)
+		prevRow, err := queries.GetPrevCompletedDate(ctx, pgtype.Timestamp{Time: oldestDay, Valid: true})
+		if err != nil {
+			http.Error(w, "No previous day found", http.StatusNotFound)
+			return
+		}
+
+		newOldest := startOfDay(prevRow.Time)
+		today := startOfDay(time.Now().UTC())
+
+		historical, _ := queries.ListHistoricalCompletedTasks(ctx, db.ListHistoricalCompletedTasksParams{
+			Column1: pgtype.Timestamp{Time: newOldest, Valid: true},
+			Column2: pgtype.Timestamp{Time: today, Valid: true},
+		})
+		historyDays := groupTasksByDay(historical)
+
+		active, _ := queries.ListActiveTasks(ctx)
+		completed, _ := queries.ListCompletedTasks(ctx)
+
+		selectedIndex := 0
+		if si := r.URL.Query().Get("selectedIndex"); si != "" {
+			if n, err := strconv.Atoi(si); err == nil {
+				selectedIndex = n
+			}
+		}
+		total := len(active) + len(completed)
+		for _, day := range historyDays {
+			total += len(day.Tasks)
+		}
+		if selectedIndex >= total && total > 0 {
+			selectedIndex = total - 1
+		}
+		if selectedIndex < 0 {
+			selectedIndex = 0
+		}
+
+		_ = views.TaskList(active, completed, selectedIndex, "Completed Today", prevDateFor(ctx, queries, newOldest), historyDays).Render(ctx, w)
 	})
 
 	r.Delete("/tasks/{id}", func(w http.ResponseWriter, r *http.Request) {

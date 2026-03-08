@@ -36,3 +36,25 @@ UPDATE tasks SET position = $2 WHERE id = $1;
 -- name: DeleteTask :exec
 DELETE FROM tasks
 WHERE id = $1;
+
+-- name: ListCompletedTasksForDate :many
+SELECT * FROM tasks
+WHERE completed_at IS NOT NULL
+  AND completed_at >= $1::timestamp
+  AND completed_at < $1::timestamp + INTERVAL '1 day'
+ORDER BY completed_at DESC;
+
+-- name: GetPrevCompletedDate :one
+SELECT DATE_TRUNC('day', completed_at)::timestamp as day
+FROM tasks
+WHERE completed_at IS NOT NULL
+  AND DATE_TRUNC('day', completed_at) < $1::timestamp
+ORDER BY completed_at DESC
+LIMIT 1;
+
+-- name: ListHistoricalCompletedTasks :many
+SELECT * FROM tasks
+WHERE completed_at IS NOT NULL
+  AND completed_at >= $1::timestamp
+  AND completed_at < $2::timestamp
+ORDER BY completed_at DESC;
