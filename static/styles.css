@@ -228,7 +228,6 @@ button:active {
 
 /* Section divider */
 .task-slider li.section-empty {
-    height: auto;
     display: flex;
     justify-content: center;
     pointer-events: none;
@@ -239,7 +238,6 @@ button:active {
     font-size: 14px;
     color: var(--muted);
 }
-
 
 .section-divider {
     height: var(--item-height);
