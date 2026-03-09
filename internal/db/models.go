@@ -5,13 +5,14 @@
 package db
 
 import (
-	"github.com/jackc/pgx/v5/pgtype"
+	"database/sql"
+	"time"
 )
 
 type Task struct {
 	ID          int32
 	Title       string
-	CompletedAt pgtype.Timestamp
+	CompletedAt sql.NullTime
 	Position    int32
-	CreatedAt   pgtype.Timestamp
+	CreatedAt   time.Time
 }

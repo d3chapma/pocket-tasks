@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "github.com/d3chapma/pocket-tasks/internal/db"
 import "fmt"
-import "github.com/jackc/pgx/v5/pgtype"
+import "database/sql"
 
 func TaskList(active []db.Task, completed []db.Task, selectedIndex int, completedLabel string, prevDate string, historyDays []CompletedDay) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -441,7 +441,7 @@ func computeRowBreakpoints(active []db.Task, completed []db.Task, historyDays []
 	return result
 }
 
-func formatTime(t pgtype.Timestamp) string {
+func formatTime(t sql.NullTime) string {
 	if !t.Valid {
 		return ""
 	}

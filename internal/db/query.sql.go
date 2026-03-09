@@ -7,8 +7,7 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
 )
 
 const completeTask = `-- name: CompleteTask :one
@@ -19,7 +18,7 @@ RETURNING id, title, completed_at, position, created_at
 `
 
 func (q *Queries) CompleteTask(ctx context.Context, id int32) (Task, error) {
-	row := q.db.QueryRow(ctx, completeTask, id)
+	row := q.db.QueryRowContext(ctx, completeTask, id)
 	var i Task
 	err := row.Scan(
 		&i.ID,
@@ -43,7 +42,7 @@ type CreateTaskParams struct {
 }
 
 func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, error) {
-	row := q.db.QueryRow(ctx, createTask, arg.Title, arg.Position)
+	row := q.db.QueryRowContext(ctx, createTask, arg.Title, arg.Position)
 	var i Task
 	err := row.Scan(
 		&i.ID,
@@ -61,7 +60,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteTask(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, deleteTask, id)
+	_, err := q.db.ExecContext(ctx, deleteTask, id)
 	return err
 }
 
@@ -70,7 +69,7 @@ SELECT COALESCE(MAX(position), 0)::int FROM tasks WHERE completed_at IS NULL
 `
 
 func (q *Queries) GetMaxPosition(ctx context.Context) (int32, error) {
-	row := q.db.QueryRow(ctx, getMaxPosition)
+	row := q.db.QueryRowContext(ctx, getMaxPosition)
 	var column_1 int32
 	err := row.Scan(&column_1)
 	return column_1, err
@@ -85,9 +84,9 @@ ORDER BY completed_at DESC
 LIMIT 1
 `
 
-func (q *Queries) GetPrevCompletedDate(ctx context.Context, dollar_1 pgtype.Timestamp) (pgtype.Timestamp, error) {
-	row := q.db.QueryRow(ctx, getPrevCompletedDate, dollar_1)
-	var day pgtype.Timestamp
+func (q *Queries) GetPrevCompletedDate(ctx context.Context, dollar_1 time.Time) (time.Time, error) {
+	row := q.db.QueryRowContext(ctx, getPrevCompletedDate, dollar_1)
+	var day time.Time
 	err := row.Scan(&day)
 	return day, err
 }
@@ -99,7 +98,7 @@ ORDER BY position ASC
 `
 
 func (q *Queries) ListActiveTasks(ctx context.Context) ([]Task, error) {
-	rows, err := q.db.Query(ctx, listActiveTasks)
+	rows, err := q.db.QueryContext(ctx, listActiveTasks)
 	if err != nil {
 		return nil, err
 	}
@@ -117,6 +116,9 @@ func (q *Queries) ListActiveTasks(ctx context.Context) ([]Task, error) {
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -133,7 +135,7 @@ ORDER BY completed_at DESC
 `
 
 func (q *Queries) ListCompletedTasks(ctx context.Context) ([]Task, error) {
-	rows, err := q.db.Query(ctx, listCompletedTasks)
+	rows, err := q.db.QueryContext(ctx, listCompletedTasks)
 	if err != nil {
 		return nil, err
 	}
@@ -151,6 +153,9 @@ func (q *Queries) ListCompletedTasks(ctx context.Context) ([]Task, error) {
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -166,8 +171,8 @@ WHERE completed_at IS NOT NULL
 ORDER BY completed_at DESC
 `
 
-func (q *Queries) ListCompletedTasksForDate(ctx context.Context, dollar_1 pgtype.Timestamp) ([]Task, error) {
-	rows, err := q.db.Query(ctx, listCompletedTasksForDate, dollar_1)
+func (q *Queries) ListCompletedTasksForDate(ctx context.Context, dollar_1 time.Time) ([]Task, error) {
+	rows, err := q.db.QueryContext(ctx, listCompletedTasksForDate, dollar_1)
 	if err != nil {
 		return nil, err
 	}
@@ -185,6 +190,9 @@ func (q *Queries) ListCompletedTasksForDate(ctx context.Context, dollar_1 pgtype
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -201,12 +209,12 @@ ORDER BY completed_at DESC
 `
 
 type ListHistoricalCompletedTasksParams struct {
-	Column1 pgtype.Timestamp
-	Column2 pgtype.Timestamp
+	Column1 time.Time
+	Column2 time.Time
 }
 
 func (q *Queries) ListHistoricalCompletedTasks(ctx context.Context, arg ListHistoricalCompletedTasksParams) ([]Task, error) {
-	rows, err := q.db.Query(ctx, listHistoricalCompletedTasks, arg.Column1, arg.Column2)
+	rows, err := q.db.QueryContext(ctx, listHistoricalCompletedTasks, arg.Column1, arg.Column2)
 	if err != nil {
 		return nil, err
 	}
@@ -224,6 +232,9 @@ func (q *Queries) ListHistoricalCompletedTasks(ctx context.Context, arg ListHist
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -244,7 +255,7 @@ type UncompleteTaskParams struct {
 }
 
 func (q *Queries) UncompleteTask(ctx context.Context, arg UncompleteTaskParams) (Task, error) {
-	row := q.db.QueryRow(ctx, uncompleteTask, arg.ID, arg.Position)
+	row := q.db.QueryRowContext(ctx, uncompleteTask, arg.ID, arg.Position)
 	var i Task
 	err := row.Scan(
 		&i.ID,
@@ -266,6 +277,6 @@ type UpdateTaskPositionParams struct {
 }
 
 func (q *Queries) UpdateTaskPosition(ctx context.Context, arg UpdateTaskPositionParams) error {
-	_, err := q.db.Exec(ctx, updateTaskPosition, arg.ID, arg.Position)
+	_, err := q.db.ExecContext(ctx, updateTaskPosition, arg.ID, arg.Position)
 	return err
 }

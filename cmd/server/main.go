@@ -2,32 +2,35 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/d3chapma/pocket-tasks/db/migrations"
+	sqlitemigrations "github.com/d3chapma/pocket-tasks/db/migrations/sqlite"
 	"github.com/d3chapma/pocket-tasks/internal/db"
+	sqlitedb "github.com/d3chapma/pocket-tasks/internal/db/sqlite"
 	"github.com/d3chapma/pocket-tasks/internal/views"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
+	_ "modernc.org/sqlite"
 )
 
 func startOfDay(t time.Time) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
 }
 
-func prevDateFor(ctx context.Context, queries *db.Queries, day time.Time) string {
-	ts := pgtype.Timestamp{Time: day, Valid: true}
-	if _, err := queries.GetPrevCompletedDate(ctx, ts); err == nil {
+func prevDateFor(ctx context.Context, queries db.Querier, day time.Time) string {
+	if _, err := queries.GetPrevCompletedDate(ctx, day); err == nil {
 		return day.Format("2006-01-02")
 	}
 	return ""
@@ -58,7 +61,7 @@ func groupTasksByDay(tasks []db.Task) []views.CompletedDay {
 	return days
 }
 
-func renderTasks(w http.ResponseWriter, r *http.Request, queries *db.Queries, selectedIndex int) {
+func renderTasks(w http.ResponseWriter, r *http.Request, queries db.Querier, selectedIndex int) {
 	ctx := r.Context()
 	active, _ := queries.ListActiveTasks(ctx)
 	completed, _ := queries.ListCompletedTasks(ctx)
@@ -75,6 +78,49 @@ func renderTasks(w http.ResponseWriter, r *http.Request, queries *db.Queries, se
 	_ = views.TaskList(active, completed, selectedIndex, "Completed Today", prevDateFor(ctx, queries, today), nil).Render(ctx, w)
 }
 
+func openDB(ctx context.Context, databaseURL string) (*sql.DB, db.Querier, func(), error) {
+	if strings.HasPrefix(databaseURL, "postgres://") || strings.HasPrefix(databaseURL, "postgresql://") {
+		pool, err := pgxpool.New(ctx, databaseURL)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		sqlDB := stdlib.OpenDBFromPool(pool)
+		goose.SetBaseFS(migrations.FS)
+		if err := goose.SetDialect("postgres"); err != nil {
+			pool.Close()
+			sqlDB.Close()
+			return nil, nil, nil, err
+		}
+		if err := goose.Up(sqlDB, "."); err != nil {
+			pool.Close()
+			sqlDB.Close()
+			return nil, nil, nil, err
+		}
+		queries := db.New(sqlDB)
+		cleanup := func() {
+			sqlDB.Close()
+			pool.Close()
+		}
+		return sqlDB, queries, cleanup, nil
+	}
+
+	sqlDB, err := sql.Open("sqlite", databaseURL)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	goose.SetBaseFS(sqlitemigrations.FS)
+	if err := goose.SetDialect("sqlite3"); err != nil {
+		sqlDB.Close()
+		return nil, nil, nil, err
+	}
+	if err := goose.Up(sqlDB, "."); err != nil {
+		sqlDB.Close()
+		return nil, nil, nil, err
+	}
+	queries := sqlitedb.New(sqlDB)
+	return sqlDB, queries, func() { sqlDB.Close() }, nil
+}
+
 func main() {
 	ctx := context.Background()
 
@@ -83,21 +129,11 @@ func main() {
 		log.Fatal("DATABASE_URL is not set")
 	}
 
-	pool, err := pgxpool.New(ctx, databaseURL)
+	_, queries, cleanup, err := openDB(ctx, databaseURL)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer pool.Close()
-
-	sqlDB := stdlib.OpenDBFromPool(pool)
-	defer sqlDB.Close()
-
-	goose.SetBaseFS(migrations.FS)
-	if err := goose.Up(sqlDB, "."); err != nil {
-		log.Fatal(err)
-	}
-
-	queries := db.New(pool)
+	defer cleanup()
 
 	r := chi.NewRouter()
 
@@ -325,18 +361,18 @@ func main() {
 		}
 
 		oldestDay := startOfDay(oldest)
-		prevRow, err := queries.GetPrevCompletedDate(ctx, pgtype.Timestamp{Time: oldestDay, Valid: true})
+		prevRow, err := queries.GetPrevCompletedDate(ctx, oldestDay)
 		if err != nil {
 			http.Error(w, "No previous day found", http.StatusNotFound)
 			return
 		}
 
-		newOldest := startOfDay(prevRow.Time)
+		newOldest := startOfDay(prevRow)
 		today := startOfDay(time.Now().UTC())
 
 		historical, _ := queries.ListHistoricalCompletedTasks(ctx, db.ListHistoricalCompletedTasksParams{
-			Column1: pgtype.Timestamp{Time: newOldest, Valid: true},
-			Column2: pgtype.Timestamp{Time: today, Valid: true},
+			Column1: newOldest,
+			Column2: today,
 		})
 		historyDays := groupTasksByDay(historical)
 
