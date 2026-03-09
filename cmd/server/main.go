@@ -61,6 +61,30 @@ func groupTasksByDay(tasks []db.Task) []views.CompletedDay {
 	return days
 }
 
+// loadHistoryDays re-fetches history for the given oldest date parameter.
+// Returns the history days and the prevDate for the "load more" button.
+func loadHistoryDays(ctx context.Context, queries db.Querier, historyOldest string) ([]views.CompletedDay, string) {
+	if historyOldest == "" {
+		return nil, ""
+	}
+	oldest, err := time.Parse("2006-01-02", historyOldest)
+	if err != nil {
+		return nil, ""
+	}
+	oldestDay := startOfDay(oldest)
+	prevRow, err := queries.GetPrevCompletedDate(ctx, oldestDay)
+	if err != nil {
+		return nil, ""
+	}
+	newOldest := startOfDay(prevRow)
+	today := startOfDay(time.Now().UTC())
+	historical, _ := queries.ListHistoricalCompletedTasks(ctx, db.ListHistoricalCompletedTasksParams{
+		Column1: newOldest,
+		Column2: today,
+	})
+	return groupTasksByDay(historical), prevDateFor(ctx, queries, newOldest)
+}
+
 func renderTasks(w http.ResponseWriter, r *http.Request, queries db.Querier, selectedIndex int) {
 	ctx := r.Context()
 	active, _ := queries.ListActiveTasks(ctx)
@@ -75,7 +99,14 @@ func renderTasks(w http.ResponseWriter, r *http.Request, queries db.Querier, sel
 	}
 
 	today := startOfDay(time.Now().UTC())
-	_ = views.TaskList(active, completed, selectedIndex, "Completed Today", prevDateFor(ctx, queries, today), nil).Render(ctx, w)
+	historyOldest := r.URL.Query().Get("historyOldest")
+	historyDays, histPrevDate := loadHistoryDays(ctx, queries, historyOldest)
+	prevDate := prevDateFor(ctx, queries, today)
+	if historyOldest != "" {
+		prevDate = histPrevDate
+	}
+
+	_ = views.TaskList(active, completed, selectedIndex, "Completed Today", prevDate, historyDays, historyOldest).Render(ctx, w)
 }
 
 func openDB(ctx context.Context, databaseURL string) (*sql.DB, db.Querier, func(), error) {
@@ -161,7 +192,7 @@ func main() {
 
 		today := startOfDay(time.Now().UTC())
 		_ = views.Layout(
-			views.TaskList(active, completed, 0, "Completed Today", prevDateFor(r.Context(), queries, today), nil),
+			views.TaskList(active, completed, 0, "Completed Today", prevDateFor(r.Context(), queries, today), nil, ""),
 		).Render(r.Context(), w)
 	})
 
@@ -173,6 +204,7 @@ func main() {
 
 		title := r.FormValue("title")
 		selectedIndex, _ := strconv.Atoi(r.URL.Query().Get("selectedIndex"))
+		historyOldest := r.URL.Query().Get("historyOldest")
 
 		active, _ := queries.ListActiveTasks(r.Context())
 		_, _ = queries.ListCompletedTasks(r.Context())
@@ -221,8 +253,15 @@ func main() {
 			newSelectedIndex = 0
 		}
 
+		ctx := r.Context()
 		today := startOfDay(time.Now().UTC())
-		_ = views.TaskList(active, completed, newSelectedIndex, "Completed Today", prevDateFor(r.Context(), queries, today), nil).Render(r.Context(), w)
+		historyDays, histPrevDate := loadHistoryDays(ctx, queries, historyOldest)
+		prevDate := prevDateFor(ctx, queries, today)
+		if historyOldest != "" {
+			prevDate = histPrevDate
+		}
+
+		_ = views.TaskList(active, completed, newSelectedIndex, "Completed Today", prevDate, historyDays, historyOldest).Render(ctx, w)
 	})
 
 	r.Post("/tasks/complete/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -232,6 +271,7 @@ func main() {
 			http.Error(w, "Invalid ID", 400)
 			return
 		}
+		historyOldest := r.URL.Query().Get("historyOldest")
 
 		_, err = queries.CompleteTask(r.Context(), int32(id))
 		if err != nil {
@@ -239,8 +279,9 @@ func main() {
 			return
 		}
 
-		active, _ := queries.ListActiveTasks(r.Context())
-		completed, _ := queries.ListCompletedTasks(r.Context())
+		ctx := r.Context()
+		active, _ := queries.ListActiveTasks(ctx)
+		completed, _ := queries.ListCompletedTasks(ctx)
 
 		// Task is now first in completed list, index = len(active)
 		newIndex := len(active)
@@ -250,7 +291,13 @@ func main() {
 		}
 
 		today := startOfDay(time.Now().UTC())
-		_ = views.TaskList(active, completed, newIndex, "Completed Today", prevDateFor(r.Context(), queries, today), nil).Render(r.Context(), w)
+		historyDays, histPrevDate := loadHistoryDays(ctx, queries, historyOldest)
+		prevDate := prevDateFor(ctx, queries, today)
+		if historyOldest != "" {
+			prevDate = histPrevDate
+		}
+
+		_ = views.TaskList(active, completed, newIndex, "Completed Today", prevDate, historyDays, historyOldest).Render(ctx, w)
 	})
 
 	r.Post("/tasks/uncomplete/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -260,6 +307,7 @@ func main() {
 			http.Error(w, "Invalid ID", 400)
 			return
 		}
+		historyOldest := r.URL.Query().Get("historyOldest")
 
 		maxPos, _ := queries.GetMaxPosition(r.Context())
 
@@ -272,8 +320,9 @@ func main() {
 			return
 		}
 
-		active, _ := queries.ListActiveTasks(r.Context())
-		completed, _ := queries.ListCompletedTasks(r.Context())
+		ctx := r.Context()
+		active, _ := queries.ListActiveTasks(ctx)
+		completed, _ := queries.ListCompletedTasks(ctx)
 
 		// Task is now last in active list
 		newIndex := len(active) - 1
@@ -282,7 +331,13 @@ func main() {
 		}
 
 		today := startOfDay(time.Now().UTC())
-		_ = views.TaskList(active, completed, newIndex, "Completed Today", prevDateFor(r.Context(), queries, today), nil).Render(r.Context(), w)
+		historyDays, histPrevDate := loadHistoryDays(ctx, queries, historyOldest)
+		prevDate := prevDateFor(ctx, queries, today)
+		if historyOldest != "" {
+			prevDate = histPrevDate
+		}
+
+		_ = views.TaskList(active, completed, newIndex, "Completed Today", prevDate, historyDays, historyOldest).Render(ctx, w)
 	})
 
 	r.Post("/tasks/move/{id}/{direction}", func(w http.ResponseWriter, r *http.Request) {
@@ -345,9 +400,17 @@ func main() {
 			})
 		}
 
-		completed, _ := queries.ListCompletedTasks(r.Context())
+		ctx := r.Context()
+		historyOldest := r.URL.Query().Get("historyOldest")
+		completed, _ := queries.ListCompletedTasks(ctx)
 		today := startOfDay(time.Now().UTC())
-		_ = views.TaskList(active, completed, newIdx, "Completed Today", prevDateFor(r.Context(), queries, today), nil).Render(r.Context(), w)
+		historyDays, histPrevDate := loadHistoryDays(ctx, queries, historyOldest)
+		prevDate := prevDateFor(ctx, queries, today)
+		if historyOldest != "" {
+			prevDate = histPrevDate
+		}
+
+		_ = views.TaskList(active, completed, newIdx, "Completed Today", prevDate, historyDays, historyOldest).Render(ctx, w)
 	})
 
 	r.Get("/tasks/history", func(w http.ResponseWriter, r *http.Request) {
@@ -396,7 +459,7 @@ func main() {
 			selectedIndex = 0
 		}
 
-		_ = views.TaskList(active, completed, selectedIndex, "Completed Today", prevDateFor(ctx, queries, newOldest), historyDays).Render(ctx, w)
+		_ = views.TaskList(active, completed, selectedIndex, "Completed Today", prevDateFor(ctx, queries, newOldest), historyDays, oldestStr).Render(ctx, w)
 	})
 
 	r.Delete("/tasks/{id}", func(w http.ResponseWriter, r *http.Request) {

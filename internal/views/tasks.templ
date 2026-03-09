@@ -4,11 +4,12 @@ import "github.com/d3chapma/pocket-tasks/internal/db"
 import "fmt"
 import "database/sql"
 
-templ TaskList(active []db.Task, completed []db.Task, selectedIndex int, completedLabel string, prevDate string, historyDays []CompletedDay) {
+templ TaskList(active []db.Task, completed []db.Task, selectedIndex int, completedLabel string, prevDate string, historyDays []CompletedDay, historyOldest string) {
 	<div
 		id="tasks"
 		data-signals:selected-index={ fmt.Sprintf("%d", selectedIndex) }
 		data-signals:show-form={ fmt.Sprintf("%t", len(active) == 0 && len(completed) == 0) }
+		data-signals:history-oldest={ fmt.Sprintf("'%s'", historyOldest) }
 		data-on:keydown__window={ fmt.Sprintf(`
 			var result = handleKeydown(event, {
 				selectedIndex: $selectedIndex,
@@ -29,7 +30,7 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int, complet
 		<form data-show="$showForm" class="new-task-form">
 			<div class="input-row">
 				<input id="new-task" type="text" name="title" placeholder="What needs to be done?" required data-effect="if ($showForm) { el.focus() }"/>
-				<button class="btn-primary" data-on:click="@post('/tasks?selectedIndex=' + $selectedIndex, {contentType: 'form'}); $showForm = false; document.getElementById('new-task').value = ''">Add</button>
+				<button class="btn-primary" data-on:click="@post('/tasks?selectedIndex=' + $selectedIndex + '&historyOldest=' + $historyOldest, {contentType: 'form'}); $showForm = false; document.getElementById('new-task').value = ''">Add</button>
 			</div>
 		</form>
 		<div class="task-viewport" data-show="!$showForm">
@@ -43,12 +44,12 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int, complet
 						<li data-task data-id={ fmt.Sprintf("%d", t.ID) }>
 							<span class="task-title">{ t.Title }</span>
 							<div class="task-actions">
-								<button class="btn-primary" data-toggle data-on:click={ fmt.Sprintf("@post('/tasks/complete/%d')", t.ID) }>Complete</button>
-								<button class="btn-primary" data-delete data-on:click={ fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID) }>Delete</button>
-								<button style="display:none" data-move-up data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/up')", t.ID) }></button>
-								<button style="display:none" data-move-down data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/down')", t.ID) }></button>
-								<button style="display:none" data-move-top data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/top')", t.ID) }></button>
-								<button style="display:none" data-move-bottom data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/bottom')", t.ID) }></button>
+								<button class="btn-primary" data-toggle data-on:click={ fmt.Sprintf("@post('/tasks/complete/%d?historyOldest=' + $historyOldest)", t.ID) }>Complete</button>
+								<button class="btn-primary" data-delete data-on:click={ fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex + '&historyOldest=' + $historyOldest)", t.ID) }>Delete</button>
+								<button style="display:none" data-move-up data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/up?historyOldest=' + $historyOldest)", t.ID) }></button>
+								<button style="display:none" data-move-down data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/down?historyOldest=' + $historyOldest)", t.ID) }></button>
+								<button style="display:none" data-move-top data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/top?historyOldest=' + $historyOldest)", t.ID) }></button>
+								<button style="display:none" data-move-bottom data-on:click={ fmt.Sprintf("@post('/tasks/move/%d/bottom?historyOldest=' + $historyOldest)", t.ID) }></button>
 							</div>
 						</li>
 						if i == len(active) - 1 {
@@ -72,8 +73,8 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int, complet
 							<span class="task-title completed">{ t.Title }</span>
 							<span class="timestamp">{ formatTime(t.CompletedAt) }</span>
 							<div class="task-actions">
-								<button class="btn-primary" data-toggle data-on:click={ fmt.Sprintf("@post('/tasks/uncomplete/%d')", t.ID) }>Undo</button>
-								<button class="btn-primary" data-delete data-on:click={ fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID) }>Delete</button>
+								<button class="btn-primary" data-toggle data-on:click={ fmt.Sprintf("@post('/tasks/uncomplete/%d?historyOldest=' + $historyOldest)", t.ID) }>Undo</button>
+								<button class="btn-primary" data-delete data-on:click={ fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex + '&historyOldest=' + $historyOldest)", t.ID) }>Delete</button>
 							</div>
 						</li>
 					}
@@ -86,15 +87,15 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int, complet
 								<span class="task-title completed">{ t.Title }</span>
 								<span class="timestamp">{ formatTime(t.CompletedAt) }</span>
 								<div class="task-actions">
-									<button class="btn-primary" data-toggle data-on:click={ fmt.Sprintf("@post('/tasks/uncomplete/%d')", t.ID) }>Undo</button>
-									<button class="btn-primary" data-delete data-on:click={ fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex)", t.ID) }>Delete</button>
+									<button class="btn-primary" data-toggle data-on:click={ fmt.Sprintf("@post('/tasks/uncomplete/%d?historyOldest=' + $historyOldest)", t.ID) }>Undo</button>
+									<button class="btn-primary" data-delete data-on:click={ fmt.Sprintf("@delete('/tasks/%d?selectedIndex=' + $selectedIndex + '&historyOldest=' + $historyOldest)", t.ID) }>Delete</button>
 								</div>
 							</li>
 						}
 					}
 				</ul>
 				if prevDate != "" {
-					<button style="display:none" data-load-history data-on:click={ fmt.Sprintf("@get('/tasks/history?oldest=%s&selectedIndex=' + $selectedIndex)", prevDate) }></button>
+					<button style="display:none" data-load-history data-on:click={ fmt.Sprintf("$historyOldest = '%s'; @get('/tasks/history?oldest=%s&selectedIndex=' + $selectedIndex)", prevDate, prevDate) }></button>
 				}
 			</div>
 			<div class="viewport-fade viewport-fade-top"></div>
