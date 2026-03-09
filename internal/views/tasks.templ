@@ -8,13 +8,14 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int, complet
 	<div
 		id="tasks"
 		data-signals:selected-index={ fmt.Sprintf("%d", selectedIndex) }
-		data-signals:show-form="false"
+		data-signals:show-form={ fmt.Sprintf("%t", len(active) == 0 && len(completed) == 0) }
 		data-on:keydown__window={ fmt.Sprintf(`
 			var result = handleKeydown(event, {
 				selectedIndex: $selectedIndex,
 				showForm: $showForm,
 				maxIndex: %d,
-				activeLen: %d
+				activeLen: %d,
+				totalLen: %d,
 			});
 			$selectedIndex = result.selectedIndex;
 			$showForm = result.showForm;
@@ -22,12 +23,12 @@ templ TaskList(active []db.Task, completed []db.Task, selectedIndex int, complet
 				var loadBtn = document.querySelector('[data-load-history]');
 				if (loadBtn) loadBtn.click();
 			}
-		`, maxIndex(active, completed, historyDays), len(active)) }
+		`, maxIndex(active, completed, historyDays), len(active), totalLen(active, completed, historyDays)) }
 		tabindex="0"
 	>
 		<form data-show="$showForm" class="new-task-form">
 			<div class="input-row">
-				<input id="new-task" type="text" name="title" placeholder="What needs to be done?" required/>
+				<input id="new-task" type="text" name="title" placeholder="What needs to be done?" required data-effect="if ($showForm) { el.focus() }"/>
 				<button class="btn-primary" data-on:click="@post('/tasks?selectedIndex=' + $selectedIndex, {contentType: 'form'}); $showForm = false; document.getElementById('new-task').value = ''">Add</button>
 			</div>
 		</form>
@@ -111,6 +112,14 @@ func maxIndex(active []db.Task, completed []db.Task, historyDays []CompletedDay)
 		return 0
 	}
 	return total - 1
+}
+
+func totalLen(active []db.Task, completed []db.Task, historyDays []CompletedDay) int {
+	total := len(active) + len(completed)
+	for _, day := range historyDays {
+		total += len(day.Tasks)
+	}
+	return total
 }
 
 // computeRowBreakpoints returns a JS array literal mapping task indices to row offsets.

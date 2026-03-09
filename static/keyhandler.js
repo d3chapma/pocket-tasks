@@ -1,6 +1,6 @@
 function handleKeydown(event, state) {
   if (state.showForm) {
-    if (event.key === "Escape") {
+    if (event.key === "Escape" && state.totalLen > 0) {
       event.preventDefault();
       return { ...state, showForm: false };
     }
