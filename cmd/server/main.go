@@ -173,6 +173,13 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
+	r.Get("/manifest.json", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/manifest.json")
+	})
+	r.Get("/sw.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/javascript")
+		http.ServeFile(w, r, "static/sw.js")
+	})
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
