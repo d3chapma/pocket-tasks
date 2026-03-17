@@ -95,10 +95,10 @@ func currentUser(r *http.Request) db.User {
 func sendMagicLink(apiKey, domain, fromEmail, toEmail, link string) error {
 	endpoint := fmt.Sprintf("https://api.mailgun.net/v3/%s/messages", domain)
 	body := strings.NewReader(fmt.Sprintf(
-		"from=%s&to=%s&subject=Sign+in+to+Pocket+Tasks&text=%s",
+		"from=%s&to=%s&subject=Sign+in+to+Flowment&text=%s",
 		fromEmail,
 		toEmail,
-		"Click+the+link+below+to+sign+in+to+Pocket+Tasks.%0A%0A"+link+"%0A%0AThis+link+expires+in+15+minutes.+If+you+didn%27t+request+this%2C+you+can+ignore+this+email.",
+		"Click+the+link+below+to+sign+in+to+Flowment.%0A%0A"+link+"%0A%0AThis+link+expires+in+15+minutes.+If+you+didn%27t+request+this%2C+you+can+ignore+this+email.",
 	))
 	req, err := http.NewRequest("POST", endpoint, body)
 	if err != nil {

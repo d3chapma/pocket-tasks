@@ -1,6 +1,6 @@
 {
-  "name": "Pocket Tasks",
-  "short_name": "Tasks",
+  "name": "Flowment",
+  "short_name": "Flowment",
   "description": "A minimal keyboard-driven task manager",
   "start_url": "/",
   "scope": "/",

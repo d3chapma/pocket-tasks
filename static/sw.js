@@ -1,4 +1,4 @@
-const CACHE = 'pocket-tasks-v1';
+const CACHE = 'flowment-v1';
 
 const PRECACHE = [
   '/',
