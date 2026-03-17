@@ -14,7 +14,7 @@ const completeTask = `-- name: CompleteTask :one
 UPDATE tasks
 SET completed_at = now()
 WHERE id = $1
-RETURNING id, title, completed_at, position, created_at
+RETURNING id, title, completed_at, position, created_at, user_id
 `
 
 func (q *Queries) CompleteTask(ctx context.Context, id int32) (Task, error) {
@@ -26,23 +26,40 @@ func (q *Queries) CompleteTask(ctx context.Context, id int32) (Task, error) {
 		&i.CompletedAt,
 		&i.Position,
 		&i.CreatedAt,
+		&i.UserID,
 	)
 	return i, err
 }
 
+const createAuthToken = `-- name: CreateAuthToken :exec
+INSERT INTO auth_tokens (token, user_id, expires_at) VALUES ($1, $2, $3)
+`
+
+type CreateAuthTokenParams struct {
+	Token     string
+	UserID    int32
+	ExpiresAt time.Time
+}
+
+func (q *Queries) CreateAuthToken(ctx context.Context, arg CreateAuthTokenParams) error {
+	_, err := q.db.ExecContext(ctx, createAuthToken, arg.Token, arg.UserID, arg.ExpiresAt)
+	return err
+}
+
 const createTask = `-- name: CreateTask :one
-INSERT INTO tasks (title, position)
-VALUES ($1, $2)
-RETURNING id, title, completed_at, position, created_at
+INSERT INTO tasks (title, position, user_id)
+VALUES ($1, $2, $3)
+RETURNING id, title, completed_at, position, created_at, user_id
 `
 
 type CreateTaskParams struct {
 	Title    string
 	Position int32
+	UserID   int32
 }
 
 func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, error) {
-	row := q.db.QueryRowContext(ctx, createTask, arg.Title, arg.Position)
+	row := q.db.QueryRowContext(ctx, createTask, arg.Title, arg.Position, arg.UserID)
 	var i Task
 	err := row.Scan(
 		&i.ID,
@@ -50,6 +67,7 @@ func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, e
 		&i.CompletedAt,
 		&i.Position,
 		&i.CreatedAt,
+		&i.UserID,
 	)
 	return i, err
 }
@@ -65,14 +83,27 @@ func (q *Queries) DeleteTask(ctx context.Context, id int32) error {
 }
 
 const getMaxPosition = `-- name: GetMaxPosition :one
-SELECT COALESCE(MAX(position), 0)::int FROM tasks WHERE completed_at IS NULL
+SELECT COALESCE(MAX(position), 0)::int FROM tasks WHERE completed_at IS NULL AND user_id = $1
 `
 
-func (q *Queries) GetMaxPosition(ctx context.Context) (int32, error) {
-	row := q.db.QueryRowContext(ctx, getMaxPosition)
+func (q *Queries) GetMaxPosition(ctx context.Context, userID int32) (int32, error) {
+	row := q.db.QueryRowContext(ctx, getMaxPosition, userID)
 	var column_1 int32
 	err := row.Scan(&column_1)
 	return column_1, err
+}
+
+const getOrCreateUser = `-- name: GetOrCreateUser :one
+INSERT INTO users (email) VALUES ($1)
+ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
+RETURNING id, email, created_at
+`
+
+func (q *Queries) GetOrCreateUser(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getOrCreateUser, email)
+	var i User
+	err := row.Scan(&i.ID, &i.Email, &i.CreatedAt)
+	return i, err
 }
 
 const getPrevCompletedDate = `-- name: GetPrevCompletedDate :one
@@ -80,25 +111,59 @@ SELECT DATE_TRUNC('day', completed_at)::timestamp as day
 FROM tasks
 WHERE completed_at IS NOT NULL
   AND DATE_TRUNC('day', completed_at) < $1::timestamp
+  AND user_id = $2
 ORDER BY completed_at DESC
 LIMIT 1
 `
 
-func (q *Queries) GetPrevCompletedDate(ctx context.Context, dollar_1 time.Time) (time.Time, error) {
-	row := q.db.QueryRowContext(ctx, getPrevCompletedDate, dollar_1)
+type GetPrevCompletedDateParams struct {
+	Column1 time.Time
+	UserID  int32
+}
+
+func (q *Queries) GetPrevCompletedDate(ctx context.Context, arg GetPrevCompletedDateParams) (time.Time, error) {
+	row := q.db.QueryRowContext(ctx, getPrevCompletedDate, arg.Column1, arg.UserID)
 	var day time.Time
 	err := row.Scan(&day)
 	return day, err
 }
 
+const getUserByID = `-- name: GetUserByID :one
+SELECT id, email, created_at FROM users WHERE id = $1
+`
+
+func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByID, id)
+	var i User
+	err := row.Scan(&i.ID, &i.Email, &i.CreatedAt)
+	return i, err
+}
+
+const getValidAuthToken = `-- name: GetValidAuthToken :one
+SELECT token, user_id, expires_at, used_at FROM auth_tokens
+WHERE token = $1 AND used_at IS NULL AND expires_at > now()
+`
+
+func (q *Queries) GetValidAuthToken(ctx context.Context, token string) (AuthToken, error) {
+	row := q.db.QueryRowContext(ctx, getValidAuthToken, token)
+	var i AuthToken
+	err := row.Scan(
+		&i.Token,
+		&i.UserID,
+		&i.ExpiresAt,
+		&i.UsedAt,
+	)
+	return i, err
+}
+
 const listActiveTasks = `-- name: ListActiveTasks :many
-SELECT id, title, completed_at, position, created_at FROM tasks
-WHERE completed_at IS NULL
+SELECT id, title, completed_at, position, created_at, user_id FROM tasks
+WHERE completed_at IS NULL AND user_id = $1
 ORDER BY position ASC
 `
 
-func (q *Queries) ListActiveTasks(ctx context.Context) ([]Task, error) {
-	rows, err := q.db.QueryContext(ctx, listActiveTasks)
+func (q *Queries) ListActiveTasks(ctx context.Context, userID int32) ([]Task, error) {
+	rows, err := q.db.QueryContext(ctx, listActiveTasks, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -112,6 +177,7 @@ func (q *Queries) ListActiveTasks(ctx context.Context) ([]Task, error) {
 			&i.CompletedAt,
 			&i.Position,
 			&i.CreatedAt,
+			&i.UserID,
 		); err != nil {
 			return nil, err
 		}
@@ -127,15 +193,16 @@ func (q *Queries) ListActiveTasks(ctx context.Context) ([]Task, error) {
 }
 
 const listCompletedTasks = `-- name: ListCompletedTasks :many
-SELECT id, title, completed_at, position, created_at FROM tasks
+SELECT id, title, completed_at, position, created_at, user_id FROM tasks
 WHERE completed_at IS NOT NULL
   AND completed_at >= CURRENT_DATE
   AND completed_at < CURRENT_DATE + INTERVAL '1 day'
+  AND user_id = $1
 ORDER BY completed_at DESC
 `
 
-func (q *Queries) ListCompletedTasks(ctx context.Context) ([]Task, error) {
-	rows, err := q.db.QueryContext(ctx, listCompletedTasks)
+func (q *Queries) ListCompletedTasks(ctx context.Context, userID int32) ([]Task, error) {
+	rows, err := q.db.QueryContext(ctx, listCompletedTasks, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -149,6 +216,7 @@ func (q *Queries) ListCompletedTasks(ctx context.Context) ([]Task, error) {
 			&i.CompletedAt,
 			&i.Position,
 			&i.CreatedAt,
+			&i.UserID,
 		); err != nil {
 			return nil, err
 		}
@@ -164,15 +232,21 @@ func (q *Queries) ListCompletedTasks(ctx context.Context) ([]Task, error) {
 }
 
 const listCompletedTasksForDate = `-- name: ListCompletedTasksForDate :many
-SELECT id, title, completed_at, position, created_at FROM tasks
+SELECT id, title, completed_at, position, created_at, user_id FROM tasks
 WHERE completed_at IS NOT NULL
   AND completed_at >= $1::timestamp
   AND completed_at < $1::timestamp + INTERVAL '1 day'
+  AND user_id = $2
 ORDER BY completed_at DESC
 `
 
-func (q *Queries) ListCompletedTasksForDate(ctx context.Context, dollar_1 time.Time) ([]Task, error) {
-	rows, err := q.db.QueryContext(ctx, listCompletedTasksForDate, dollar_1)
+type ListCompletedTasksForDateParams struct {
+	Column1 time.Time
+	UserID  int32
+}
+
+func (q *Queries) ListCompletedTasksForDate(ctx context.Context, arg ListCompletedTasksForDateParams) ([]Task, error) {
+	rows, err := q.db.QueryContext(ctx, listCompletedTasksForDate, arg.Column1, arg.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -186,6 +260,7 @@ func (q *Queries) ListCompletedTasksForDate(ctx context.Context, dollar_1 time.T
 			&i.CompletedAt,
 			&i.Position,
 			&i.CreatedAt,
+			&i.UserID,
 		); err != nil {
 			return nil, err
 		}
@@ -201,20 +276,22 @@ func (q *Queries) ListCompletedTasksForDate(ctx context.Context, dollar_1 time.T
 }
 
 const listHistoricalCompletedTasks = `-- name: ListHistoricalCompletedTasks :many
-SELECT id, title, completed_at, position, created_at FROM tasks
+SELECT id, title, completed_at, position, created_at, user_id FROM tasks
 WHERE completed_at IS NOT NULL
   AND completed_at >= $1::timestamp
   AND completed_at < $2::timestamp
+  AND user_id = $3
 ORDER BY completed_at DESC
 `
 
 type ListHistoricalCompletedTasksParams struct {
 	Column1 time.Time
 	Column2 time.Time
+	UserID  int32
 }
 
 func (q *Queries) ListHistoricalCompletedTasks(ctx context.Context, arg ListHistoricalCompletedTasksParams) ([]Task, error) {
-	rows, err := q.db.QueryContext(ctx, listHistoricalCompletedTasks, arg.Column1, arg.Column2)
+	rows, err := q.db.QueryContext(ctx, listHistoricalCompletedTasks, arg.Column1, arg.Column2, arg.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -228,6 +305,7 @@ func (q *Queries) ListHistoricalCompletedTasks(ctx context.Context, arg ListHist
 			&i.CompletedAt,
 			&i.Position,
 			&i.CreatedAt,
+			&i.UserID,
 		); err != nil {
 			return nil, err
 		}
@@ -242,11 +320,20 @@ func (q *Queries) ListHistoricalCompletedTasks(ctx context.Context, arg ListHist
 	return items, nil
 }
 
+const markAuthTokenUsed = `-- name: MarkAuthTokenUsed :exec
+UPDATE auth_tokens SET used_at = now() WHERE token = $1
+`
+
+func (q *Queries) MarkAuthTokenUsed(ctx context.Context, token string) error {
+	_, err := q.db.ExecContext(ctx, markAuthTokenUsed, token)
+	return err
+}
+
 const uncompleteTask = `-- name: UncompleteTask :one
 UPDATE tasks
 SET completed_at = NULL, position = $2
 WHERE id = $1
-RETURNING id, title, completed_at, position, created_at
+RETURNING id, title, completed_at, position, created_at, user_id
 `
 
 type UncompleteTaskParams struct {
@@ -263,6 +350,7 @@ func (q *Queries) UncompleteTask(ctx context.Context, arg UncompleteTaskParams) 
 		&i.CompletedAt,
 		&i.Position,
 		&i.CreatedAt,
+		&i.UserID,
 	)
 	return i, err
 }

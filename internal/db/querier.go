@@ -11,14 +11,19 @@ import (
 
 type Querier interface {
 	CompleteTask(ctx context.Context, id int32) (Task, error)
+	CreateAuthToken(ctx context.Context, arg CreateAuthTokenParams) error
 	CreateTask(ctx context.Context, arg CreateTaskParams) (Task, error)
 	DeleteTask(ctx context.Context, id int32) error
-	GetMaxPosition(ctx context.Context) (int32, error)
-	GetPrevCompletedDate(ctx context.Context, dollar_1 time.Time) (time.Time, error)
-	ListActiveTasks(ctx context.Context) ([]Task, error)
-	ListCompletedTasks(ctx context.Context) ([]Task, error)
-	ListCompletedTasksForDate(ctx context.Context, dollar_1 time.Time) ([]Task, error)
+	GetMaxPosition(ctx context.Context, userID int32) (int32, error)
+	GetOrCreateUser(ctx context.Context, email string) (User, error)
+	GetPrevCompletedDate(ctx context.Context, arg GetPrevCompletedDateParams) (time.Time, error)
+	GetUserByID(ctx context.Context, id int32) (User, error)
+	GetValidAuthToken(ctx context.Context, token string) (AuthToken, error)
+	ListActiveTasks(ctx context.Context, userID int32) ([]Task, error)
+	ListCompletedTasks(ctx context.Context, userID int32) ([]Task, error)
+	ListCompletedTasksForDate(ctx context.Context, arg ListCompletedTasksForDateParams) ([]Task, error)
 	ListHistoricalCompletedTasks(ctx context.Context, arg ListHistoricalCompletedTasksParams) ([]Task, error)
+	MarkAuthTokenUsed(ctx context.Context, token string) error
 	UncompleteTask(ctx context.Context, arg UncompleteTaskParams) (Task, error)
 	UpdateTaskPosition(ctx context.Context, arg UpdateTaskPositionParams) error
 }

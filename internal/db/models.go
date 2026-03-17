@@ -9,10 +9,24 @@ import (
 	"time"
 )
 
+type AuthToken struct {
+	Token     string
+	UserID    int32
+	ExpiresAt time.Time
+	UsedAt    sql.NullTime
+}
+
 type Task struct {
 	ID          int32
 	Title       string
 	CompletedAt sql.NullTime
 	Position    int32
 	CreatedAt   time.Time
+	UserID      int32
+}
+
+type User struct {
+	ID        int32
+	Email     string
+	CreatedAt time.Time
 }

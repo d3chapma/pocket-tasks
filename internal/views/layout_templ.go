@@ -8,7 +8,7 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-func Layout(content templ.Component) templ.Component {
+func Layout(content templ.Component, userEmail string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -29,7 +29,20 @@ func Layout(content templ.Component) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><meta name=\"theme-color\" content=\"#6366f1\"><meta name=\"apple-mobile-web-app-capable\" content=\"yes\"><meta name=\"apple-mobile-web-app-status-bar-style\" content=\"black-translucent\"><meta name=\"apple-mobile-web-app-title\" content=\"Pocket Tasks\"><title>Pocket Tasks</title><link rel=\"manifest\" href=\"/manifest.json\"><link rel=\"icon\" href=\"/static/icon.svg\" type=\"image/svg+xml\"><link rel=\"apple-touch-icon\" href=\"/static/icon.svg\"><link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap\" rel=\"stylesheet\"><link rel=\"stylesheet\" href=\"/static/styles.css\"><script src=\"/static/keyhandler.js\"></script><script type=\"module\" src=\"/static/datastar.js\"></script></head><body><div class=\"offline-banner\">Offline — changes won't sync until you reconnect</div><div class=\"app\"><h1>Pocket Tasks</h1>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><meta name=\"theme-color\" content=\"#6366f1\"><meta name=\"apple-mobile-web-app-capable\" content=\"yes\"><meta name=\"apple-mobile-web-app-status-bar-style\" content=\"black-translucent\"><meta name=\"apple-mobile-web-app-title\" content=\"Pocket Tasks\"><title>Pocket Tasks</title><link rel=\"manifest\" href=\"/manifest.json\"><link rel=\"icon\" href=\"/static/icon.svg\" type=\"image/svg+xml\"><link rel=\"apple-touch-icon\" href=\"/static/icon.svg\"><link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap\" rel=\"stylesheet\"><link rel=\"stylesheet\" href=\"/static/styles.css\"><script src=\"/static/keyhandler.js\"></script><script type=\"module\" src=\"/static/datastar.js\"></script></head><body><div class=\"offline-banner\">Offline — changes won't sync until you reconnect</div><div class=\"app\"><div class=\"app-header\"><h1>Pocket Tasks</h1><div class=\"user-bar\"><span class=\"user-email\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var2 string
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(userEmail)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/layout.templ`, Line: 30, Col: 42}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</span><form method=\"post\" action=\"/auth/logout\"><button type=\"submit\" class=\"btn-signout\">Sign out</button></form></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -37,7 +50,7 @@ func Layout(content templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></body><div id=\"toast\" class=\"toast\"></div><script>\n\t\t\t(function () {\n\t\t\t\tfunction update() {\n\t\t\t\t\tdocument.body.classList.toggle('offline', !navigator.onLine);\n\t\t\t\t}\n\t\t\t\twindow.addEventListener('online', update);\n\t\t\t\twindow.addEventListener('offline', update);\n\t\t\t\tupdate();\n\t\t\t})();\n\t\t\tif ('serviceWorker' in navigator) {\n\t\t\t\tnavigator.serviceWorker.register('/sw.js');\n\t\t\t}\n\t\t</script></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></body><div id=\"toast\" class=\"toast\"></div><script>\n\t\t\t(function () {\n\t\t\t\tfunction update() {\n\t\t\t\t\tdocument.body.classList.toggle('offline', !navigator.onLine);\n\t\t\t\t}\n\t\t\t\twindow.addEventListener('online', update);\n\t\t\t\twindow.addEventListener('offline', update);\n\t\t\t\tupdate();\n\t\t\t})();\n\t\t\tif ('serviceWorker' in navigator) {\n\t\t\t\tnavigator.serviceWorker.register('/sw.js');\n\t\t\t}\n\t\t</script></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

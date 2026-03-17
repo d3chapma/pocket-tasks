@@ -1,6 +1,6 @@
 package views
 
-templ Layout(content templ.Component) {
+templ Layout(content templ.Component, userEmail string) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -24,7 +24,15 @@ templ Layout(content templ.Component) {
 		<body>
 			<div class="offline-banner">Offline — changes won't sync until you reconnect</div>
 			<div class="app">
-				<h1>Pocket Tasks</h1>
+				<div class="app-header">
+					<h1>Pocket Tasks</h1>
+					<div class="user-bar">
+						<span class="user-email">{ userEmail }</span>
+						<form method="post" action="/auth/logout">
+							<button type="submit" class="btn-signout">Sign out</button>
+						</form>
+					</div>
+				</div>
 				@content
 			</div>
 		</body>

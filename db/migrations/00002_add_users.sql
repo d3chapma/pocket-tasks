@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email TEXT NOT NULL UNIQUE,
@@ -11,6 +12,7 @@ CREATE TABLE auth_tokens (
     used_at TIMESTAMP
 );
 
+DROP TABLE tasks;
 CREATE TABLE tasks (
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
@@ -19,3 +21,15 @@ CREATE TABLE tasks (
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     user_id INTEGER NOT NULL REFERENCES users(id)
 );
+
+-- +goose Down
+DROP TABLE tasks;
+CREATE TABLE tasks (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    completed_at TIMESTAMP,
+    position INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+DROP TABLE auth_tokens;
+DROP TABLE users;
