@@ -1,4 +1,4 @@
-const CACHE = 'flowment-v2';
+const CACHE = 'flowment-__VERSION__';
 
 const PRECACHE = [
   '/',

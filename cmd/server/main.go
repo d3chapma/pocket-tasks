@@ -275,6 +275,13 @@ func main() {
 		baseURL = "http://localhost:8080"
 	}
 
+	assetVersion := "dev"
+	if flyRef := os.Getenv("FLY_IMAGE_REF"); flyRef != "" {
+		h := hmac.New(sha256.New, []byte("asset"))
+		h.Write([]byte(flyRef))
+		assetVersion = hex.EncodeToString(h.Sum(nil))[:8]
+	}
+
 	_, queries, cleanup, err := openDB(ctx, databaseURL)
 	if err != nil {
 		log.Fatal(err)
@@ -291,8 +298,15 @@ func main() {
 		http.ServeFile(w, r, "static/manifest.json")
 	})
 	r.Get("/sw.js", func(w http.ResponseWriter, r *http.Request) {
+		content, err := os.ReadFile("static/sw.js")
+		if err != nil {
+			http.Error(w, "Not found", 404)
+			return
+		}
+		versioned := strings.ReplaceAll(string(content), "__VERSION__", assetVersion)
 		w.Header().Set("Content-Type", "application/javascript")
-		http.ServeFile(w, r, "static/sw.js")
+		w.Header().Set("Cache-Control", "no-cache")
+		fmt.Fprint(w, versioned)
 	})
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
