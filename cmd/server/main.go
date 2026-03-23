@@ -316,7 +316,7 @@ func main() {
 
 	r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
 		hasError := r.URL.Query().Get("error") == "1"
-		_ = views.Login(false, hasError).Render(r.Context(), w)
+		_ = views.Login(false, hasError, "").Render(r.Context(), w)
 	})
 
 	r.Post("/auth/login", func(w http.ResponseWriter, r *http.Request) {
@@ -329,6 +329,7 @@ func main() {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
+		clientID := strings.TrimSpace(r.FormValue("client_id"))
 
 		user, err := queries.GetOrCreateUser(r.Context(), email)
 		if err != nil {
@@ -348,6 +349,7 @@ func main() {
 			Token:     token,
 			UserID:    user.ID,
 			ExpiresAt: expiresAt,
+			ClientID:  sql.NullString{String: clientID, Valid: clientID != ""},
 		}); err != nil {
 			log.Println("CreateAuthToken error:", err)
 			http.Error(w, "Server error", 500)
@@ -367,7 +369,7 @@ func main() {
 			log.Printf("Magic link for %s: %s\n", email, magicLink)
 		}
 
-		_ = views.Login(true, false).Render(r.Context(), w)
+		_ = views.Login(true, false, clientID).Render(r.Context(), w)
 	})
 
 	r.Get("/auth/verify", func(w http.ResponseWriter, r *http.Request) {
@@ -399,7 +401,16 @@ func main() {
 			SameSite: http.SameSiteLaxMode,
 			MaxAge:   60 * 60 * 24 * 30, // 30 days
 		})
-		http.Redirect(w, r, "/", http.StatusFound)
+
+		if authToken.ClientID.Valid && authToken.ClientID.String != "" {
+			_ = queries.CreatePendingSession(r.Context(), db.CreatePendingSessionParams{
+				ClientID:     authToken.ClientID.String,
+				SessionValue: sessionValue,
+				ExpiresAt:    time.Now().UTC().Add(5 * time.Minute),
+			})
+		}
+
+		_ = views.AuthSuccess().Render(r.Context(), w)
 	})
 
 	r.Post("/auth/logout", func(w http.ResponseWriter, r *http.Request) {
@@ -411,6 +422,30 @@ func main() {
 			MaxAge:   -1,
 		})
 		http.Redirect(w, r, "/login", http.StatusFound)
+	})
+
+	r.Get("/auth/poll", func(w http.ResponseWriter, r *http.Request) {
+		clientID := r.URL.Query().Get("client_id")
+		if clientID == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		session, err := queries.GetPendingSession(r.Context(), clientID)
+		if err != nil {
+			w.WriteHeader(http.StatusAccepted) // not ready yet
+			return
+		}
+		_ = queries.DeletePendingSession(r.Context(), clientID)
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session",
+			Value:    session.SessionValue,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   strings.HasPrefix(baseURL, "https"),
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   60 * 60 * 24 * 30,
+		})
+		w.WriteHeader(http.StatusOK)
 	})
 
 	// --- Task routes (authenticated) ---

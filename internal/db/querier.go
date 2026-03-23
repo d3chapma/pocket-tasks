@@ -12,10 +12,13 @@ import (
 type Querier interface {
 	CompleteTask(ctx context.Context, id int32) (Task, error)
 	CreateAuthToken(ctx context.Context, arg CreateAuthTokenParams) error
+	CreatePendingSession(ctx context.Context, arg CreatePendingSessionParams) error
 	CreateTask(ctx context.Context, arg CreateTaskParams) (Task, error)
+	DeletePendingSession(ctx context.Context, clientID string) error
 	DeleteTask(ctx context.Context, id int32) error
 	GetMaxPosition(ctx context.Context, userID int32) (int32, error)
 	GetOrCreateUser(ctx context.Context, email string) (User, error)
+	GetPendingSession(ctx context.Context, clientID string) (PendingSession, error)
 	GetPrevCompletedDate(ctx context.Context, arg GetPrevCompletedDateParams) (time.Time, error)
 	GetUserByID(ctx context.Context, id int32) (User, error)
 	GetValidAuthToken(ctx context.Context, token string) (AuthToken, error)

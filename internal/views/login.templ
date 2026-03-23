@@ -1,6 +1,6 @@
 package views
 
-templ Login(sent bool, hasError bool) {
+templ Login(sent bool, hasError bool, clientID string) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -19,15 +19,56 @@ templ Login(sent bool, hasError bool) {
 				<h1>Flowment</h1>
 				if sent {
 					<p class="login-message">Check your email for a sign-in link. It expires in 15 minutes.</p>
+					if clientID != "" {
+						<span id="poll-anchor" data-client-id={ clientID }></span>
+						<script>
+							(function() {
+								var id = document.getElementById('poll-anchor').dataset.clientId;
+								function poll() {
+									fetch('/auth/poll?client_id=' + encodeURIComponent(id), {credentials: 'include'})
+										.then(function(r) { if (r.status === 200) window.location.href = '/'; })
+										.catch(function() {});
+								}
+								setInterval(poll, 3000);
+								document.addEventListener('visibilitychange', function() { if (!document.hidden) poll(); });
+								poll();
+							})();
+						</script>
+					}
 				} else {
 					if hasError {
 						<p class="login-error">That link is invalid or has expired.</p>
 					}
-					<form method="post" action="/auth/login" class="login-form">
+					<form method="post" action="/auth/login" class="login-form" onsubmit="this.elements['client_id'].value=crypto.randomUUID()">
 						<input type="email" name="email" placeholder="your@email.com" required autofocus/>
+						<input type="hidden" name="client_id"/>
 						<button type="submit" class="btn-primary">Send sign-in link</button>
 					</form>
 				}
+			</div>
+		</body>
+	</html>
+}
+
+templ AuthSuccess() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<meta name="theme-color" content="#6366f1"/>
+			<title>Signed in — Flowment</title>
+			<link rel="icon" href="/static/icon.svg" type="image/svg+xml"/>
+			<link rel="preconnect" href="https://fonts.googleapis.com"/>
+			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+			<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+			<link rel="stylesheet" href="/static/styles.css"/>
+		</head>
+		<body>
+			<div class="login-card">
+				<h1>Flowment</h1>
+				<p class="login-message">You&#39;re signed in! Return to the Flowment app.</p>
+				<a href="/" class="btn-primary">Open Flowment</a>
 			</div>
 		</body>
 	</html>

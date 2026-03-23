@@ -81,16 +81,16 @@ func (q *Queries) GetUserByID(ctx context.Context, id int32) (db.User, error) {
 }
 
 const createAuthToken = `
-INSERT INTO auth_tokens (token, user_id, expires_at) VALUES (?, ?, ?)
+INSERT INTO auth_tokens (token, user_id, expires_at, client_id) VALUES (?, ?, ?, ?)
 `
 
 func (q *Queries) CreateAuthToken(ctx context.Context, arg db.CreateAuthTokenParams) error {
-	_, err := q.db.ExecContext(ctx, createAuthToken, arg.Token, arg.UserID, arg.ExpiresAt.UTC().Format(timeFormat))
+	_, err := q.db.ExecContext(ctx, createAuthToken, arg.Token, arg.UserID, arg.ExpiresAt.UTC().Format(timeFormat), arg.ClientID)
 	return err
 }
 
 const getValidAuthToken = `
-SELECT token, user_id, expires_at, used_at FROM auth_tokens
+SELECT token, user_id, expires_at, used_at, client_id FROM auth_tokens
 WHERE token = ? AND used_at IS NULL AND expires_at > strftime('%Y-%m-%d %H:%M:%S', 'now')
 `
 
@@ -99,13 +99,47 @@ func (q *Queries) GetValidAuthToken(ctx context.Context, token string) (db.AuthT
 	var t db.AuthToken
 	var expiresAt string
 	var usedAt sql.NullString
-	err := row.Scan(&t.Token, &t.UserID, &expiresAt, &usedAt)
+	err := row.Scan(&t.Token, &t.UserID, &expiresAt, &usedAt, &t.ClientID)
 	if err != nil {
 		return t, err
 	}
 	t.ExpiresAt, _ = time.Parse(timeFormat, expiresAt)
 	t.UsedAt = parseNullTime(usedAt)
 	return t, nil
+}
+
+const createPendingSession = `
+INSERT INTO pending_sessions (client_id, session_value, expires_at) VALUES (?, ?, ?)
+ON CONFLICT(client_id) DO UPDATE SET session_value = excluded.session_value, expires_at = excluded.expires_at
+`
+
+func (q *Queries) CreatePendingSession(ctx context.Context, arg db.CreatePendingSessionParams) error {
+	_, err := q.db.ExecContext(ctx, createPendingSession, arg.ClientID, arg.SessionValue, arg.ExpiresAt.UTC().Format(timeFormat))
+	return err
+}
+
+const getPendingSession = `
+SELECT client_id, session_value, expires_at FROM pending_sessions
+WHERE client_id = ? AND expires_at > strftime('%Y-%m-%d %H:%M:%S', 'now')
+`
+
+func (q *Queries) GetPendingSession(ctx context.Context, clientID string) (db.PendingSession, error) {
+	row := q.db.QueryRowContext(ctx, getPendingSession, clientID)
+	var s db.PendingSession
+	var expiresAt string
+	err := row.Scan(&s.ClientID, &s.SessionValue, &expiresAt)
+	if err != nil {
+		return s, err
+	}
+	s.ExpiresAt, _ = time.Parse(timeFormat, expiresAt)
+	return s, nil
+}
+
+const deletePendingSession = `DELETE FROM pending_sessions WHERE client_id = ?`
+
+func (q *Queries) DeletePendingSession(ctx context.Context, clientID string) error {
+	_, err := q.db.ExecContext(ctx, deletePendingSession, clientID)
+	return err
 }
 
 const markAuthTokenUsed = `

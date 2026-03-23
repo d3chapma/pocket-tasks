@@ -8,7 +8,14 @@ CREATE TABLE auth_tokens (
     token TEXT PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id),
     expires_at TIMESTAMP NOT NULL,
-    used_at TIMESTAMP
+    used_at TIMESTAMP,
+    client_id TEXT
+);
+
+CREATE TABLE pending_sessions (
+    client_id TEXT PRIMARY KEY,
+    session_value TEXT NOT NULL,
+    expires_at TIMESTAMP NOT NULL
 );
 
 CREATE TABLE tasks (

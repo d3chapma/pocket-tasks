@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -32,17 +33,39 @@ func (q *Queries) CompleteTask(ctx context.Context, id int32) (Task, error) {
 }
 
 const createAuthToken = `-- name: CreateAuthToken :exec
-INSERT INTO auth_tokens (token, user_id, expires_at) VALUES ($1, $2, $3)
+INSERT INTO auth_tokens (token, user_id, expires_at, client_id) VALUES ($1, $2, $3, $4)
 `
 
 type CreateAuthTokenParams struct {
 	Token     string
 	UserID    int32
 	ExpiresAt time.Time
+	ClientID  sql.NullString
 }
 
 func (q *Queries) CreateAuthToken(ctx context.Context, arg CreateAuthTokenParams) error {
-	_, err := q.db.ExecContext(ctx, createAuthToken, arg.Token, arg.UserID, arg.ExpiresAt)
+	_, err := q.db.ExecContext(ctx, createAuthToken,
+		arg.Token,
+		arg.UserID,
+		arg.ExpiresAt,
+		arg.ClientID,
+	)
+	return err
+}
+
+const createPendingSession = `-- name: CreatePendingSession :exec
+INSERT INTO pending_sessions (client_id, session_value, expires_at) VALUES ($1, $2, $3)
+ON CONFLICT (client_id) DO UPDATE SET session_value = EXCLUDED.session_value, expires_at = EXCLUDED.expires_at
+`
+
+type CreatePendingSessionParams struct {
+	ClientID     string
+	SessionValue string
+	ExpiresAt    time.Time
+}
+
+func (q *Queries) CreatePendingSession(ctx context.Context, arg CreatePendingSessionParams) error {
+	_, err := q.db.ExecContext(ctx, createPendingSession, arg.ClientID, arg.SessionValue, arg.ExpiresAt)
 	return err
 }
 
@@ -70,6 +93,15 @@ func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, e
 		&i.UserID,
 	)
 	return i, err
+}
+
+const deletePendingSession = `-- name: DeletePendingSession :exec
+DELETE FROM pending_sessions WHERE client_id = $1
+`
+
+func (q *Queries) DeletePendingSession(ctx context.Context, clientID string) error {
+	_, err := q.db.ExecContext(ctx, deletePendingSession, clientID)
+	return err
 }
 
 const deleteTask = `-- name: DeleteTask :exec
@@ -103,6 +135,18 @@ func (q *Queries) GetOrCreateUser(ctx context.Context, email string) (User, erro
 	row := q.db.QueryRowContext(ctx, getOrCreateUser, email)
 	var i User
 	err := row.Scan(&i.ID, &i.Email, &i.CreatedAt)
+	return i, err
+}
+
+const getPendingSession = `-- name: GetPendingSession :one
+SELECT client_id, session_value, expires_at FROM pending_sessions
+WHERE client_id = $1 AND expires_at > now()
+`
+
+func (q *Queries) GetPendingSession(ctx context.Context, clientID string) (PendingSession, error) {
+	row := q.db.QueryRowContext(ctx, getPendingSession, clientID)
+	var i PendingSession
+	err := row.Scan(&i.ClientID, &i.SessionValue, &i.ExpiresAt)
 	return i, err
 }
 
@@ -140,7 +184,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
 }
 
 const getValidAuthToken = `-- name: GetValidAuthToken :one
-SELECT token, user_id, expires_at, used_at FROM auth_tokens
+SELECT token, user_id, expires_at, used_at, client_id FROM auth_tokens
 WHERE token = $1 AND used_at IS NULL AND expires_at > now()
 `
 
@@ -152,6 +196,7 @@ func (q *Queries) GetValidAuthToken(ctx context.Context, token string) (AuthToke
 		&i.UserID,
 		&i.ExpiresAt,
 		&i.UsedAt,
+		&i.ClientID,
 	)
 	return i, err
 }

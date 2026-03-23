@@ -14,6 +14,13 @@ type AuthToken struct {
 	UserID    int32
 	ExpiresAt time.Time
 	UsedAt    sql.NullTime
+	ClientID  sql.NullString
+}
+
+type PendingSession struct {
+	ClientID     string
+	SessionValue string
+	ExpiresAt    time.Time
 }
 
 type Task struct {

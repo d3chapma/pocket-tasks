@@ -7,7 +7,18 @@ RETURNING *;
 SELECT * FROM users WHERE id = $1;
 
 -- name: CreateAuthToken :exec
-INSERT INTO auth_tokens (token, user_id, expires_at) VALUES ($1, $2, $3);
+INSERT INTO auth_tokens (token, user_id, expires_at, client_id) VALUES ($1, $2, $3, $4);
+
+-- name: CreatePendingSession :exec
+INSERT INTO pending_sessions (client_id, session_value, expires_at) VALUES ($1, $2, $3)
+ON CONFLICT (client_id) DO UPDATE SET session_value = EXCLUDED.session_value, expires_at = EXCLUDED.expires_at;
+
+-- name: GetPendingSession :one
+SELECT client_id, session_value, expires_at FROM pending_sessions
+WHERE client_id = $1 AND expires_at > now();
+
+-- name: DeletePendingSession :exec
+DELETE FROM pending_sessions WHERE client_id = $1;
 
 -- name: GetValidAuthToken :one
 SELECT * FROM auth_tokens
