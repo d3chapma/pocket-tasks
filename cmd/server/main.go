@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"slices"
 	"strconv"
@@ -94,13 +95,14 @@ func currentUser(r *http.Request) db.User {
 
 func sendMagicLink(apiKey, domain, fromEmail, toEmail, link string) error {
 	endpoint := fmt.Sprintf("https://api.mailgun.net/v3/%s/messages", domain)
-	body := strings.NewReader(fmt.Sprintf(
-		"from=%s&to=%s&subject=Sign+in+to+Flowment&text=%s",
-		fromEmail,
-		toEmail,
-		"Click+the+link+below+to+sign+in+to+Flowment.%0A%0A"+link+"%0A%0AThis+link+expires+in+15+minutes.+If+you+didn%27t+request+this%2C+you+can+ignore+this+email.",
-	))
-	req, err := http.NewRequest("POST", endpoint, body)
+	params := url.Values{
+		"from":    {fromEmail},
+		"to":      {toEmail},
+		"subject": {"Sign in to Flowment"},
+		"text":    {fmt.Sprintf("Click the link below to sign in to Flowment.\n\n%s\n\nThis link expires in 15 minutes. If you didn't request this, you can ignore this email.", link)},
+		"html":    {fmt.Sprintf(`<p>Click the link below to sign in to Flowment.</p><p><a href="%s">Sign in to Flowment</a></p><p>This link expires in 15 minutes. If you didn't request this, you can ignore this email.</p>`, link)},
+	}
+	req, err := http.NewRequest("POST", endpoint, strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
 	}
